@@ -48,53 +48,72 @@ const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Ascension: { bg: '#085041', color: '#9FE1CB' },
 }
 
-const BATCH_SIZE = 8
+// Fetch a single arcane price directly from warframe.market (browser-side, no CORS issues)
+async function fetchArcanePrice(slug: string): Promise<number | null> {
+  const res = await fetch(
+    `https://api.warframe.market/v1/items/${slug}/orders`,
+    {
+      headers: {
+        'Accept': 'application/json',
+        'Platform': 'pc',
+        'Language': 'en',
+      },
+    }
+  )
+  if (!res.ok) return null
+
+  const data = await res.json()
+  const orders: any[] = data?.payload?.orders ?? []
+
+  const sells = orders.filter((o) => {
+    if (o.order_type !== 'sell') return false
+    // mod_rank 5 = max rank arcane; some arcanes may not have mod_rank
+    if (o.mod_rank !== undefined && o.mod_rank !== null && o.mod_rank !== 5) return false
+    return true
+  })
+
+  if (!sells.length) return null
+
+  const online = sells.filter(
+    (o) => o.user?.status === 'ingame' || o.user?.status === 'online'
+  )
+  const pool = online.length > 0 ? online : sells
+  pool.sort((a: any, b: any) => a.platinum - b.platinum)
+  return pool[0].platinum
+}
+
+const CONCURRENCY = 4
 
 export default function PriceTracker() {
   const [prices, setPrices] = useState<Record<string, number | null>>({})
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
-  const [errorMsg, setErrorMsg] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done'>('idle')
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('price-desc')
-  const [progress, setProgress] = useState(0)
+  const [done, setDone] = useState(0)
 
   const loadPrices = useCallback(async () => {
     setStatus('loading')
-    setProgress(0)
-    setErrorMsg('')
+    setDone(0)
     setPrices({})
 
-    const slugs = ARCANES.map(a => a.slug)
     const result: Record<string, number | null> = {}
+    const slugs = ARCANES.map(a => a.slug)
 
-    for (let i = 0; i < slugs.length; i += BATCH_SIZE) {
-      const batch = slugs.slice(i, i + BATCH_SIZE)
-      try {
-        const res = await fetch('/api/prices', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slugs: batch }),
+    // Process with limited concurrency to avoid rate limiting
+    for (let i = 0; i < slugs.length; i += CONCURRENCY) {
+      const batch = slugs.slice(i, i + CONCURRENCY)
+      await Promise.all(
+        batch.map(async (slug) => {
+          result[slug] = await fetchArcanePrice(slug)
         })
-        if (res.ok) {
-          const data = await res.json()
-          if (data.error) {
-            setErrorMsg(data.error)
-          } else {
-            Object.assign(result, data.prices || {})
-          }
-        } else {
-          const txt = await res.text()
-          setErrorMsg(`HTTP ${res.status}: ${txt.slice(0, 100)}`)
-          batch.forEach(s => { result[s] = null })
-        }
-      } catch (e: any) {
-        setErrorMsg(e.message)
-        batch.forEach(s => { result[s] = null })
-      }
-      const pct = Math.round(((i + BATCH_SIZE) / slugs.length) * 100)
-      setProgress(Math.min(pct, 100))
+      )
+      setDone(i + batch.length)
       setPrices({ ...result })
+      // Small delay between batches to respect rate limits
+      if (i + CONCURRENCY < slugs.length) {
+        await new Promise(r => setTimeout(r, 300))
+      }
     }
 
     setUpdatedAt(new Date())
@@ -104,7 +123,7 @@ export default function PriceTracker() {
   useEffect(() => { loadPrices() }, [loadPrices])
 
   const tiers = ['all', 'Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension']
-  const loaded = Object.values(prices).filter(v => v !== null && v !== undefined).length
+  const foundCount = Object.values(prices).filter(v => v !== null && v !== undefined).length
 
   let items = ARCANES
     .filter(a => filter === 'all' || a.tier === filter)
@@ -115,9 +134,10 @@ export default function PriceTracker() {
   else if (sort === 'name') items.sort((a, b) => a.name.localeCompare(b.name))
   else if (sort === 'tier') items.sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier])
 
+  const progress = Math.round((done / ARCANES.length) * 100)
+
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1rem' }}>
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: '#fff' }}>Arcane Prices</h1>
@@ -125,14 +145,9 @@ export default function PriceTracker() {
             Operation: Belly of the Beast — warframe.market • Rank 5
           </p>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#555' }}>
-            {status === 'loading' && `Se încarcă... ${progress}% (${loaded}/${ARCANES.length})`}
-            {status === 'done' && updatedAt && `Actualizat: ${updatedAt.toLocaleTimeString('ro-RO')} • ${loaded} prețuri găsite`}
+            {status === 'loading' && `Se încarcă... ${progress}% (${done}/${ARCANES.length})`}
+            {status === 'done' && updatedAt && `Actualizat: ${updatedAt.toLocaleTimeString('ro-RO')} • ${foundCount} prețuri găsite`}
           </p>
-          {errorMsg && (
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#e55', background: '#2a1a1a', padding: '4px 8px', borderRadius: 4 }}>
-              ⚠ {errorMsg} — <a href="/api/debug" target="_blank" style={{ color: '#5a8dee' }}>debug</a>
-            </p>
-          )}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <select
@@ -157,7 +172,7 @@ export default function PriceTracker() {
 
       {status === 'loading' && (
         <div style={{ height: 3, background: '#222', borderRadius: 2, marginBottom: 16, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${progress}%`, background: '#5a8dee', transition: 'width 0.4s ease', borderRadius: 2 }} />
+          <div style={{ height: '100%', width: `${progress}%`, background: '#5a8dee', transition: 'width 0.3s ease', borderRadius: 2 }} />
         </div>
       )}
 
@@ -196,7 +211,7 @@ export default function PriceTracker() {
       </div>
 
       <div style={{ marginTop: 24, fontSize: 11, color: '#444', textAlign: 'center' }}>
-        Sursa: warframe.market • Prețuri la Rank 5 maxim
+        Sursa: warframe.market • Prețuri live la Rank 5 maxim
       </div>
     </div>
   )
