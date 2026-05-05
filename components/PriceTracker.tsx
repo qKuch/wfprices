@@ -40,7 +40,6 @@ const ARCANES = [
 ]
 
 const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4 }
-
 const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Legendary: { bg: '#3C3489', color: '#CECBF6' },
   Rare:      { bg: '#633806', color: '#FAC775' },
@@ -49,11 +48,12 @@ const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Ascension: { bg: '#085041', color: '#9FE1CB' },
 }
 
-const BATCH_SIZE = 6
+const BATCH_SIZE = 8
 
 export default function PriceTracker() {
   const [prices, setPrices] = useState<Record<string, number | null>>({})
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [filter, setFilter] = useState('all')
   const [sort, setSort] = useState('price-desc')
@@ -62,6 +62,7 @@ export default function PriceTracker() {
   const loadPrices = useCallback(async () => {
     setStatus('loading')
     setProgress(0)
+    setErrorMsg('')
     setPrices({})
 
     const slugs = ARCANES.map(a => a.slug)
@@ -77,14 +78,22 @@ export default function PriceTracker() {
         })
         if (res.ok) {
           const data = await res.json()
-          Object.assign(result, data.prices || {})
+          if (data.error) {
+            setErrorMsg(data.error)
+          } else {
+            Object.assign(result, data.prices || {})
+          }
         } else {
+          const txt = await res.text()
+          setErrorMsg(`HTTP ${res.status}: ${txt.slice(0, 100)}`)
           batch.forEach(s => { result[s] = null })
         }
-      } catch {
+      } catch (e: any) {
+        setErrorMsg(e.message)
         batch.forEach(s => { result[s] = null })
       }
-      setProgress(Math.round(((i + BATCH_SIZE) / slugs.length) * 100))
+      const pct = Math.round(((i + BATCH_SIZE) / slugs.length) * 100)
+      setProgress(Math.min(pct, 100))
       setPrices({ ...result })
     }
 
@@ -95,6 +104,7 @@ export default function PriceTracker() {
   useEffect(() => { loadPrices() }, [loadPrices])
 
   const tiers = ['all', 'Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension']
+  const loaded = Object.values(prices).filter(v => v !== null && v !== undefined).length
 
   let items = ARCANES
     .filter(a => filter === 'all' || a.tier === filter)
@@ -105,24 +115,24 @@ export default function PriceTracker() {
   else if (sort === 'name') items.sort((a, b) => a.name.localeCompare(b.name))
   else if (sort === 'tier') items.sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier])
 
-  const loaded = Object.values(prices).filter(v => v !== null && v !== undefined).length
-
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1rem' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: '#fff' }}>
-            Arcane Prices
-          </h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: '#fff' }}>Arcane Prices</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: '#888' }}>
             Operation: Belly of the Beast — warframe.market • Rank 5
           </p>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#555' }}>
-            {status === 'loading' && `Se încarcă... ${Math.min(progress, 100)}% (${loaded}/${ARCANES.length} arcane)`}
+            {status === 'loading' && `Se încarcă... ${progress}% (${loaded}/${ARCANES.length})`}
             {status === 'done' && updatedAt && `Actualizat: ${updatedAt.toLocaleTimeString('ro-RO')} • ${loaded} prețuri găsite`}
-            {status === 'error' && 'Eroare la încărcare'}
           </p>
+          {errorMsg && (
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#e55', background: '#2a1a1a', padding: '4px 8px', borderRadius: 4 }}>
+              ⚠ {errorMsg} — <a href="/api/debug" target="_blank" style={{ color: '#5a8dee' }}>debug</a>
+            </p>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <select
@@ -145,34 +155,20 @@ export default function PriceTracker() {
         </div>
       </div>
 
-      {/* Progress bar */}
       {status === 'loading' && (
         <div style={{ height: 3, background: '#222', borderRadius: 2, marginBottom: 16, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${Math.min(progress, 100)}%`, background: '#5a8dee', transition: 'width 0.4s ease', borderRadius: 2 }} />
+          <div style={{ height: '100%', width: `${progress}%`, background: '#5a8dee', transition: 'width 0.4s ease', borderRadius: 2 }} />
         </div>
       )}
 
-      {/* Filter buttons */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
         {tiers.map(t => (
-          <button
-            key={t}
-            onClick={() => setFilter(t)}
-            style={{
-              fontSize: 12, padding: '4px 12px',
-              borderRadius: 20,
-              border: filter === t ? '1px solid #5a8dee' : '1px solid #333',
-              background: filter === t ? '#1a2a44' : 'transparent',
-              color: filter === t ? '#5a8dee' : '#888',
-              cursor: 'pointer',
-            }}
-          >
+          <button key={t} onClick={() => setFilter(t)} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, border: filter === t ? '1px solid #5a8dee' : '1px solid #333', background: filter === t ? '#1a2a44' : 'transparent', color: filter === t ? '#5a8dee' : '#888', cursor: 'pointer' }}>
             {t === 'all' ? 'Toate' : t}
           </button>
         ))}
       </div>
 
-      {/* Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
         {items.map(a => {
           const ts = TIER_STYLE[a.tier]
@@ -180,26 +176,18 @@ export default function PriceTracker() {
           return (
             <div key={a.slug} style={{ background: '#16161a', border: '1px solid #2a2a2e', borderRadius: 12, padding: '14px 16px' }}>
               <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 6 }}>{a.name}</div>
-              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: ts.bg, color: ts.color, display: 'inline-block', marginBottom: 10 }}>
-                {a.tier}
-              </span>
+              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: ts.bg, color: ts.color, display: 'inline-block', marginBottom: 10 }}>{a.tier}</span>
               <div style={{ fontSize: 11, color: '#666', marginBottom: 2 }}>Min. sell (R5)</div>
               <div style={{ fontSize: 22, fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>
                 {a.price !== null && a.price !== undefined
                   ? <>{a.price} <span style={{ fontSize: 13, color: '#888', fontWeight: 400 }}>pt</span></>
-                  : <span style={{ fontSize: 14, color: '#444' }}>{status === 'loading' ? '...' : '—'}</span>
-                }
+                  : <span style={{ fontSize: 14, color: '#444' }}>{status === 'loading' ? '...' : '—'}</span>}
               </div>
               <div style={{ fontSize: 11, color: '#666', marginTop: 6 }}>
                 {a.tier === 'Ascension' ? `${a.motes} Vestigial Motes` : `${a.motes} Volatile Mote${a.motes > 1 ? 's' : ''}`}
               </div>
               {ratio && <div style={{ fontSize: 11, color: '#555', marginTop: 2 }}>~{ratio} pt/mote</div>}
-              <a
-                href={`https://warframe.market/items/${a.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ fontSize: 11, color: '#5a8dee', textDecoration: 'none', marginTop: 6, display: 'inline-block' }}
-              >
+              <a href={`https://warframe.market/items/${a.slug}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: '#5a8dee', textDecoration: 'none', marginTop: 6, display: 'inline-block' }}>
                 warframe.market ↗
               </a>
             </div>
@@ -208,7 +196,7 @@ export default function PriceTracker() {
       </div>
 
       <div style={{ marginTop: 24, fontSize: 11, color: '#444', textAlign: 'center' }}>
-        Sursa: warframe.market • Prețuri la Rank 5 maxim • Powered by Anthropic
+        Sursa: warframe.market • Prețuri la Rank 5 maxim
       </div>
     </div>
   )
