@@ -109,7 +109,7 @@ export default function PriceTracker() {
 
   useEffect(() => { loadPrices() }, [loadPrices])
 
-  const tiers = ['all', 'Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension']
+  const tiers = ['all', 'Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension', 'Special']
   const foundCount = Object.values(prices).filter(v => v.price !== null).length
   const progress = Math.round((done / ARCANES.length) * 100)
 
