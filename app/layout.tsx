@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Warframe Arcane Prices — Belly of the Beast',
-  description: 'Live arcane prices from warframe.market for Operation: Belly of the Beast',
+  title: 'Warframe Arcane Prices',
+  description: 'Live arcane prices from warframe.market',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
