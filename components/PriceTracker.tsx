@@ -37,7 +37,7 @@ const ARCANES = [
   { name: 'Secondary Surge',     slug: 'secondary_surge',     tier: 'Ascension', motes: 10 },
   { name: 'Secondary Fortifier', slug: 'secondary_fortifier', tier: 'Ascension', motes: 10 },
   { name: 'Melee Afflictions',   slug: 'melee_afflictions',   tier: 'Ascension', motes: 10 },
-  { name: 'khora',               slug: 'khora_prime_set',     tier: 'Ascension', motes: 10 },
+  { name: 'khora',               slug: 'voruna_prime_set',     tier: 'Ascension', motes: 10 },
 ]
 
 const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4 }
