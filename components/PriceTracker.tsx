@@ -138,7 +138,7 @@ export default function PriceTracker() {
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: '#fff' }}>Arcane Prices</h1>
           <p style={{ margin: '4px 0 0', fontSize: 13, color: '#888' }}>
-            Operation: Belly of the Beast — warframe.market • Rank 5 • Media ultimelor 4h
+            warframe.market • Rank 5 • Media ultimelor 4h
           </p>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#555' }}>
             {status === 'loading' && `Se încarcă... ${progress}% (${done}/${ARCANES.length})`}
