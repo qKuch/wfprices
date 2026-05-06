@@ -50,7 +50,7 @@ const TIER_STYLE: Record<string, { bg: string; color: string }> = {
 
 async function fetchArcanePrice(slug: string): Promise<number | null> {
   const res = await fetch(
-    `https://wf-proxy.teodordan22.workers.dev/${slug}`
+    `https://wf-proxy.teodordan22.workers.dev/${slug}`,
     { headers: { 'Accept': 'application/json' } }
   )
   if (!res.ok) return null
