@@ -50,7 +50,7 @@ const TIER_STYLE: Record<string, { bg: string; color: string }> = {
 
 async function fetchArcanePrice(slug: string): Promise<number | null> {
   const res = await fetch(
-    `https://corsproxy.io/?https://api.warframe.market/v1/items/${slug}/orders`,
+    `https://corsproxy.io/?warframe.market/items/${slug}?type=sell`,
     { headers: { 'Accept': 'application/json' } }
   )
   if (!res.ok) return null
