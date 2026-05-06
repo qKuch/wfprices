@@ -38,19 +38,20 @@ const ARCANES = [
   { name: 'Arcane Momentum',      slug: 'arcane_momentum',      tier: 'Common',    motes: 2 },
   { name: 'Arcane Tempo',         slug: 'arcane_tempo',         tier: 'Common',    motes: 2 },
   { name: 'Arcane Consequence',   slug: 'arcane_consequence',   tier: 'Common',    motes: 2 },
-  { name: 'Arcane Impetus',       slug: 'arcane_impetus',       tier: 'Common',    motes: 99 },
+  { name: 'Arcane Impetus',       slug: 'arcane_impetus',       tier: 'Special',   motes: 1 },
 ]
 
 // ⚠️ Schimbă asta cu URL-ul tău de worker
 const WORKER_URL = 'https://wf-proxy.teodordan22.workers.dev'
 
-const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4 }
+const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4, Special: 5 }
 const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Legendary: { bg: '#3C3489', color: '#CECBF6' },
   Rare:      { bg: '#633806', color: '#FAC775' },
   Uncommon:  { bg: '#0C447C', color: '#B5D4F4' },
   Common:    { bg: '#3a3a38', color: '#D3D1C7' },
   Ascension: { bg: '#085041', color: '#9FE1CB' },
+  Special:   { bg: '#ffffff', color: '#000000' },
 }
 
 interface PriceData {
