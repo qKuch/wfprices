@@ -39,7 +39,7 @@ const ARCANES = [
   { name: 'Arcane Tempo',         slug: 'arcane_tempo',         tier: 'Common',    motes: 2 },
   { name: 'Arcane Consequence',   slug: 'arcane_consequence',   tier: 'Common',    motes: 2 },
   { name: 'Arcane Impetus',       slug: 'arcane_impetus',       tier: 'Special',   motes: 1 },
-  { name: 'khora',               slug: 'voruna_prime_set',     tier: 'Ascension', motes: 10 },
+  { name: 'Voruna Prime Set',     slug: 'voruna_prime_set',     tier: 'Special', motes: 10 },
 ]
 
 const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4, Special: 5  }
