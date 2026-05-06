@@ -36,8 +36,9 @@ const ARCANES = [
   { name: 'Arcane Warmth',        slug: 'arcane_warmth',        tier: 'Common',    motes: 2 },
   { name: 'Arcane Ice',           slug: 'arcane_ice',           tier: 'Common',    motes: 2 },
   { name: 'Arcane Momentum',      slug: 'arcane_momentum',      tier: 'Common',    motes: 2 },
-  { name: 'Arcane Tempo',          slug: 'arcane_tempo',        tier: 'Common',    motes: 2 },
+  { name: 'Arcane Tempo',         slug: 'arcane_tempo',         tier: 'Common',    motes: 2 },
   { name: 'Arcane Consequence',   slug: 'arcane_consequence',   tier: 'Common',    motes: 2 },
+  { name: 'Arcane Impetus',       slug: 'arcane_impetus',       tier: 'Common',    motes: 99 },
 ]
 
 // ⚠️ Schimbă asta cu URL-ul tău de worker
