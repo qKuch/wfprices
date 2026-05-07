@@ -3,56 +3,52 @@
 import { useState, useEffect, useCallback } from 'react'
 
 const ARCANES = [
-  { name: 'Arcane Energize',      slug: 'arcane_energize',      tier: 'Legendary', motes: 30 },
-  { name: 'Arcane Grace',         slug: 'arcane_grace',         tier: 'Legendary', motes: 30 },
-  { name: 'Arcane Barrier',       slug: 'arcane_barrier',       tier: 'Legendary', motes: 30 },
-  { name: 'Arcane Ice Storm',     slug: 'arcane_ice_storm',     tier: 'Ascension', motes: 10 },
-  { name: 'Arcane Battery',       slug: 'arcane_battery',       tier: 'Ascension', motes: 10 },
-  { name: 'Secondary Surge',      slug: 'secondary_surge',      tier: 'Ascension', motes: 10 },
-  { name: 'Secondary Fortifier',  slug: 'secondary_fortifier',  tier: 'Ascension', motes: 10 },
-  { name: 'Melee Afflictions',    slug: 'melee_afflictions',    tier: 'Ascension', motes: 10 },
-  { name: 'Arcane Aegis',         slug: 'arcane_aegis',         tier: 'Rare',      motes: 6 },
-  { name: 'Arcane Arachne',       slug: 'arcane_arachne',       tier: 'Rare',      motes: 6 },
-  { name: 'Arcane Rage',          slug: 'arcane_rage',          tier: 'Rare',      motes: 6 },
-  { name: 'Arcane Fury',          slug: 'arcane_fury',          tier: 'Rare',      motes: 6 },
-  { name: 'Arcane Avenger',       slug: 'arcane_avenger',       tier: 'Rare',      motes: 6 },
-  { name: 'Arcane Precision',     slug: 'arcane_precision',     tier: 'Rare',      motes: 6 },
-  { name: 'Arcane Pulse',         slug: 'arcane_pulse',         tier: 'Rare',      motes: 6 },
-  { name: 'Arcane Ultimatum',     slug: 'arcane_ultimatum',     tier: 'Rare',      motes: 6 },
-  { name: 'Arcane Victory',       slug: 'arcane_victory',       tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Strike',        slug: 'arcane_strike',        tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Awakening',     slug: 'arcane_awakening',     tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Guardian',      slug: 'arcane_guardian',      tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Phantasm',      slug: 'arcane_phantasm',      tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Eruption',      slug: 'arcane_eruption',      tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Agility',       slug: 'arcane_agility',       tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Acceleration',  slug: 'arcane_acceleration',  tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Trickery',      slug: 'arcane_trickery',      tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Velocity',      slug: 'arcane_velocity',      tier: 'Uncommon',  motes: 4 },
-  { name: 'Arcane Deflection',    slug: 'arcane_deflection',    tier: 'Uncommon',  motes: 2 },
-  { name: 'Arcane Healing',       slug: 'arcane_healing',       tier: 'Uncommon',  motes: 2 },
-  { name: 'Arcane Resistance',    slug: 'arcane_resistance',    tier: 'Uncommon',  motes: 2 },
-  { name: 'Arcane Nullifier',     slug: 'arcane_nullifier',     tier: 'Common',    motes: 2 },
-  { name: 'Arcane Warmth',        slug: 'arcane_warmth',        tier: 'Common',    motes: 2 },
-  { name: 'Arcane Ice',           slug: 'arcane_ice',           tier: 'Common',    motes: 2 },
-  { name: 'Arcane Momentum',      slug: 'arcane_momentum',      tier: 'Common',    motes: 2 },
-  { name: 'Arcane Tempo',         slug: 'arcane_tempo',         tier: 'Common',    motes: 2 },
-  { name: 'Arcane Consequence',   slug: 'arcane_consequence',   tier: 'Common',    motes: 2 },
-  { name: 'Arcane Impetus',       slug: 'arcane_impetus',       tier: 'Special',   motes: 1 },
-  { name: 'Voruna Prime Set',     slug: 'voruna_prime_set',     tier: 'Special',   motes: 10 },
+  { name: 'Arcane Energize',     slug: 'arcane_energize',     tier: 'Legendary', motes: 30 },
+  { name: 'Arcane Grace',        slug: 'arcane_grace',        tier: 'Legendary', motes: 30 },
+  { name: 'Arcane Barrier',      slug: 'arcane_barrier',      tier: 'Legendary', motes: 30 },
+  { name: 'Arcane Aegis',        slug: 'arcane_aegis',        tier: 'Rare',      motes: 5  },
+  { name: 'Arcane Arachne',      slug: 'arcane_arachne',      tier: 'Rare',      motes: 5  },
+  { name: 'Arcane Avenger',      slug: 'arcane_avenger',      tier: 'Rare',      motes: 5  },
+  { name: 'Arcane Fury',         slug: 'arcane_fury',         tier: 'Rare',      motes: 5  },
+  { name: 'Arcane Precision',    slug: 'arcane_precision',    tier: 'Rare',      motes: 5  },
+  { name: 'Arcane Pulse',        slug: 'arcane_pulse',        tier: 'Rare',      motes: 5  },
+  { name: 'Arcane Rage',         slug: 'arcane_rage',         tier: 'Rare',      motes: 5  },
+  { name: 'Arcane Ultimatum',    slug: 'arcane_ultimatum',    tier: 'Rare',      motes: 5  },
+  { name: 'Arcane Acceleration', slug: 'arcane_acceleration', tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Agility',      slug: 'arcane_agility',      tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Awakening',    slug: 'arcane_awakening',    tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Deflection',   slug: 'arcane_deflection',   tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Eruption',     slug: 'arcane_eruption',     tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Guardian',     slug: 'arcane_guardian',     tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Healing',      slug: 'arcane_healing',      tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Phantasm',     slug: 'arcane_phantasm',     tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Resistance',   slug: 'arcane_resistance',   tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Strike',       slug: 'arcane_strike',       tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Trickery',     slug: 'arcane_trickery',     tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Velocity',     slug: 'arcane_velocity',     tier: 'Uncommon',  motes: 3  },
+  { name: 'Arcane Consequence',  slug: 'arcane_consequence',  tier: 'Common',    motes: 1  },
+  { name: 'Arcane Ice',          slug: 'arcane_ice',          tier: 'Common',    motes: 1  },
+  { name: 'Arcane Momentum',     slug: 'arcane_momentum',     tier: 'Common',    motes: 1  },
+  { name: 'Arcane Nullifier',    slug: 'arcane_nullifier',    tier: 'Common',    motes: 1  },
+  { name: 'Arcane Tempo',        slug: 'arcane_tempo',        tier: 'Common',    motes: 1  },
+  { name: 'Arcane Warmth',       slug: 'arcane_warmth',       tier: 'Common',    motes: 1  },
+  { name: 'Arcane Ice Storm',    slug: 'arcane_ice_storm',    tier: 'Ascension', motes: 10 },
+  { name: 'Arcane Battery',      slug: 'arcane_battery',      tier: 'Ascension', motes: 10 },
+  { name: 'Secondary Surge',     slug: 'secondary_surge',     tier: 'Ascension', motes: 10 },
+  { name: 'Secondary Fortifier', slug: 'secondary_fortifier', tier: 'Ascension', motes: 10 },
+  { name: 'Melee Afflictions',   slug: 'melee_afflictions',   tier: 'Ascension', motes: 10 },
 ]
 
 // Evenimentul se termina pe 1 iunie 2026
 const EVENT_END = new Date('2026-06-01T23:59:59Z')
 
-const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4, Special: 5  }
+const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4 }
 const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Legendary: { bg: '#3C3489', color: '#CECBF6' },
   Rare:      { bg: '#633806', color: '#FAC775' },
   Uncommon:  { bg: '#0C447C', color: '#B5D4F4' },
   Common:    { bg: '#3a3a38', color: '#D3D1C7' },
   Ascension: { bg: '#085041', color: '#9FE1CB' },
-  Special:   { bg: '#ffffff', color: '#000000' },
 }
 
 interface PriceData {
@@ -130,7 +126,7 @@ export default function PriceTracker() {
 
   useEffect(() => { loadPrices() }, [loadPrices])
 
-  const tiers = ['all', 'Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension', 'Special']
+  const tiers = ['all', 'Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension']
   const foundCount = Object.values(prices).filter(v => v.price !== null).length
   const progress = Math.round((done / ARCANES.length) * 100)
   const motes = parseInt(motesInput) || 0
@@ -208,13 +204,19 @@ export default function PriceTracker() {
                 if (!arcane) return null
                 const price = prices[arcane.slug]?.price
                 if (!price) return null
-                const canBuy = Math.floor(motes / arcane.motes)
-                const profit = canBuy * price
+                // 21 copii necesare pentru rank 5 (1+2+3+4+5+6)
+                const COPIES_FOR_R5 = 21
+                const motesPerR5 = arcane.motes * COPIES_FOR_R5
+                const fullR5 = Math.floor(motes / motesPerR5)
+                const remainingCopies = Math.floor((motes % motesPerR5) / arcane.motes)
+                const profit = fullR5 * price
                 return (
                   <div key={tier} style={{ background: '#0d0d0f', border: '1px solid #2a2a2e', borderRadius: 8, padding: '6px 12px', fontSize: 12 }}>
                     <span style={{ color: '#888' }}>{tier}: </span>
                     <span style={{ color: '#fff', fontWeight: 600 }}>{profit} pt</span>
-                    <span style={{ color: '#555' }}> ({canBuy}x {arcane.name.replace('Arcane ', '')})</span>
+                    <span style={{ color: '#555' }}> ({fullR5}x R5 {arcane.name.replace('Arcane ', '')})</span>
+                    {remainingCopies > 0 && <span style={{ color: '#444' }}> +{remainingCopies} copii extra</span>}
+                    {fullR5 === 0 && <span style={{ color: '#555' }}> (trebuie {motesPerR5} motes/R5)</span>}
                   </div>
                 )
               })}
@@ -319,11 +321,23 @@ export default function PriceTracker() {
               {ratio && <div style={{ fontSize: 11, color: isBestInTier ? '#4caf50' : '#555', marginTop: 2, fontWeight: isBestInTier ? 600 : 400 }}>~{ratio} pt/mote</div>}
 
               {/* Profit din motes introduse */}
-              {profitFromMotes !== null && profitFromMotes > 0 && (
-                <div style={{ marginTop: 6, padding: '4px 8px', background: '#0d1a0d', borderRadius: 6, fontSize: 12, color: '#4caf50' }}>
-                  {profitFromMotes} pt din {motes} motes
-                </div>
-              )}
+              {motes > 0 && pd.price !== null && (() => {
+                const COPIES_FOR_R5 = 21
+                const motesPerR5 = a.motes * COPIES_FOR_R5
+                const fullR5 = Math.floor(motes / motesPerR5)
+                const remaining = Math.floor((motes % motesPerR5) / a.motes)
+                const profit = fullR5 * (pd.price ?? 0)
+                if (fullR5 === 0) return (
+                  <div style={{ marginTop: 6, padding: '4px 8px', background: '#1a1a0d', borderRadius: 6, fontSize: 11, color: '#888' }}>
+                    Trebuie {motesPerR5} motes pentru 1x R5
+                  </div>
+                )
+                return (
+                  <div style={{ marginTop: 6, padding: '4px 8px', background: '#0d1a0d', borderRadius: 6, fontSize: 12, color: '#4caf50' }}>
+                    {profit} pt ({fullR5}x R5{remaining > 0 ? ` +${remaining} copii` : ''})
+                  </div>
+                )
+              })()}
 
               <a href={`https://warframe.market/items/${a.slug}`} target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: 11, color: '#5a8dee', textDecoration: 'none', marginTop: 6, display: 'inline-block' }}>
