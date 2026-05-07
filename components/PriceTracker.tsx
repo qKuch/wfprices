@@ -46,9 +46,7 @@ const ARCANES = [
   { name: 'Melee Afflictions',   slug: 'melee_afflictions',   tier: 'Ascension', motes: 10 },
 ]
 
-// Evenimentul se termina pe 1 iunie 2026
 const EVENT_END = new Date('2026-06-01T23:59:59Z')
-
 const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4 }
 const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Legendary: { bg: '#3C3489', color: '#CECBF6' },
@@ -60,9 +58,121 @@ const TIER_STYLE: Record<string, { bg: string; color: string }> = {
 
 interface PriceData {
   price: number | null
-  min?: number
-  max?: number
+  min?: number | null
+  max?: number | null
   entries?: number
+  history?: { t: string; v: number }[]
+  change24h?: number | null
+}
+
+// ── Sparkline SVG ──────────────────────────────────────────
+function Sparkline({ data, w = 80, h = 28 }: { data: { v: number }[]; w?: number; h?: number }) {
+  if (!data || data.length < 2) return <div style={{ height: h }} />
+  const vals = data.map(d => d.v)
+  const min = Math.min(...vals)
+  const max = Math.max(...vals)
+  const range = max - min || 1
+  const pts = vals.map((v, i) => {
+    const x = (i / (vals.length - 1)) * w
+    const y = h - ((v - min) / range) * (h - 4) - 2
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  const last = vals[vals.length - 1]
+  const first = vals[0]
+  const color = last >= first ? '#4caf50' : '#e55'
+  return (
+    <svg width={w} height={h} style={{ display: 'block' }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// ── Large Chart Modal ──────────────────────────────────────
+function ChartModal({ arcane, pd, onClose }: { arcane: typeof ARCANES[0]; pd: PriceData; onClose: () => void }) {
+  const history = pd.history ?? []
+  const W = 520, H = 180, PAD = 40
+
+  const vals = history.map(d => d.v).filter(v => v > 0)
+  const minV = vals.length ? Math.min(...vals) : 0
+  const maxV = vals.length ? Math.max(...vals) : 1
+  const range = maxV - minV || 1
+
+  const toX = (i: number) => PAD + (i / Math.max(history.length - 1, 1)) * (W - PAD * 2)
+  const toY = (v: number) => PAD + (H - PAD * 2) - ((v - minV) / range) * (H - PAD * 2)
+
+  const pts = history.map((d, i) => `${toX(i).toFixed(1)},${toY(d.v).toFixed(1)}`).join(' ')
+  const ts = TIER_STYLE[arcane.tier]
+
+  // Labels
+  const labelCount = Math.min(history.length, 6)
+  const labelIdxs = Array.from({ length: labelCount }, (_, i) =>
+    Math.round((i / (labelCount - 1)) * (history.length - 1))
+  )
+
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+    >
+      <div onClick={e => e.stopPropagation()} style={{ background: '#16161a', border: '1px solid #2a2a2e', borderRadius: 16, padding: 24, maxWidth: 580, width: '100%' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>{arcane.name}</div>
+            <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: ts.bg, color: ts.color, display: 'inline-block', marginTop: 4 }}>{arcane.tier}</span>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>{pd.price} <span style={{ fontSize: 13, color: '#888' }}>pt</span></div>
+            {pd.change24h !== null && pd.change24h !== undefined && (
+              <div style={{ fontSize: 13, color: pd.change24h > 0 ? '#4caf50' : pd.change24h < 0 ? '#e55' : '#888' }}>
+                {pd.change24h > 0 ? '↑' : pd.change24h < 0 ? '↓' : '→'} {Math.abs(pd.change24h)}% față de 24h
+              </div>
+            )}
+            <button onClick={onClose} style={{ marginTop: 8, fontSize: 11, padding: '3px 10px', borderRadius: 6, border: '1px solid #333', background: 'transparent', color: '#888', cursor: 'pointer' }}>✕ Închide</button>
+          </div>
+        </div>
+
+        {history.length >= 2 ? (
+          <svg width="100%" viewBox={`0 0 ${W} ${H + PAD}`} style={{ display: 'block' }}>
+            {/* Grid lines */}
+            {[0, 0.25, 0.5, 0.75, 1].map(f => {
+              const y = PAD + (H - PAD * 2) * (1 - f)
+              const v = Math.round(minV + range * f)
+              return (
+                <g key={f}>
+                  <line x1={PAD} y1={y} x2={W - PAD} y2={y} stroke="#2a2a2e" strokeWidth="1" />
+                  <text x={PAD - 6} y={y + 4} fontSize="10" fill="#555" textAnchor="end">{v}</text>
+                </g>
+              )
+            })}
+            {/* Chart line */}
+            <polyline points={pts} fill="none" stroke="#5a8dee" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+            {/* Dots on data points */}
+            {history.map((d, i) => (
+              <circle key={i} cx={toX(i)} cy={toY(d.v)} r="2.5" fill="#5a8dee" opacity="0.7" />
+            ))}
+            {/* X axis labels */}
+            {labelIdxs.map(i => {
+              const d = history[i]
+              const label = new Date(d.t).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })
+              return (
+                <text key={i} x={toX(i)} y={H + PAD - 4} fontSize="9" fill="#555" textAnchor="middle">{label}</text>
+              )
+            })}
+          </svg>
+        ) : (
+          <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontSize: 13 }}>
+            Date insuficiente pentru grafic
+          </div>
+        )}
+
+        <div style={{ marginTop: 12, display: 'flex', gap: 16, fontSize: 12, color: '#666' }}>
+          <span>Min 48h: <b style={{ color: '#fff' }}>{pd.min} pt</b></span>
+          <span>Max 48h: <b style={{ color: '#fff' }}>{pd.max} pt</b></span>
+          <span>Puncte date: <b style={{ color: '#fff' }}>{history.length}</b></span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 async function fetchBatch(slugs: string[]): Promise<Record<string, PriceData>> {
@@ -75,28 +185,17 @@ async function fetchBatch(slugs: string[]): Promise<Record<string, PriceData>> {
     if (!res.ok) return {}
     const data = await res.json()
     return data.prices ?? {}
-  } catch {
-    return {}
-  }
+  } catch { return {} }
 }
 
 function useCountdown(target: Date) {
   const calc = () => {
     const diff = target.getTime() - Date.now()
     if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true }
-    return {
-      days: Math.floor(diff / 86400000),
-      hours: Math.floor((diff % 86400000) / 3600000),
-      minutes: Math.floor((diff % 3600000) / 60000),
-      seconds: Math.floor((diff % 60000) / 1000),
-      expired: false,
-    }
+    return { days: Math.floor(diff / 86400000), hours: Math.floor((diff % 86400000) / 3600000), minutes: Math.floor((diff % 3600000) / 60000), seconds: Math.floor((diff % 60000) / 1000), expired: false }
   }
   const [time, setTime] = useState(calc)
-  useEffect(() => {
-    const t = setInterval(() => setTime(calc()), 1000)
-    return () => clearInterval(t)
-  }, [])
+  useEffect(() => { const t = setInterval(() => setTime(calc()), 1000); return () => clearInterval(t) }, [])
   return time
 }
 
@@ -110,25 +209,20 @@ export default function PriceTracker() {
   const [sort, setSort] = useState('price-desc')
   const [done, setDone] = useState(0)
   const [motesInput, setMotesInput] = useState('')
-
+  const [selectedArcane, setSelectedArcane] = useState<typeof ARCANES[0] | null>(null)
   const countdown = useCountdown(EVENT_END)
 
   const loadPrices = useCallback(async () => {
-    setStatus('loading')
-    setDone(0)
-    setPrices({})
+    setStatus('loading'); setDone(0); setPrices({})
     const slugs = ARCANES.map(a => a.slug)
     const result: Record<string, PriceData> = {}
     for (let i = 0; i < slugs.length; i += CONCURRENCY) {
       const batch = slugs.slice(i, i + CONCURRENCY)
-      const batchResult = await fetchBatch(batch)
-      Object.assign(result, batchResult)
-      setDone(i + batch.length)
-      setPrices({ ...result })
+      Object.assign(result, await fetchBatch(batch))
+      setDone(i + batch.length); setPrices({ ...result })
       if (i + CONCURRENCY < slugs.length) await new Promise(r => setTimeout(r, 100))
     }
-    setUpdatedAt(new Date())
-    setStatus('done')
+    setUpdatedAt(new Date()); setStatus('done')
   }, [])
 
   useEffect(() => { loadPrices() }, [loadPrices])
@@ -138,30 +232,15 @@ export default function PriceTracker() {
   const progress = Math.round((done / ARCANES.length) * 100)
   const motes = parseInt(motesInput) || 0
 
-  // Find best ratio arcane (per tier) for highlighting
-  const allRatios = ARCANES
-    .map(a => ({ slug: a.slug, ratio: (prices[a.slug]?.price ?? 0) / a.motes }))
-    .filter(x => x.ratio > 0)
-  const bestRatioSlugs = new Set(
-    ['Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension'].map(tier => {
-      const inTier = ARCANES
-        .filter(a => a.tier === tier)
-        .map(a => ({ slug: a.slug, ratio: (prices[a.slug]?.price ?? 0) / a.motes }))
-        .filter(x => x.ratio > 0)
-      if (!inTier.length) return ''
-      return inTier.sort((a, b) => b.ratio - a.ratio)[0].slug
-    }).filter(Boolean)
-  )
-  const globalBest = allRatios.length
-    ? allRatios.sort((a, b) => b.ratio - a.ratio)[0].slug
-    : ''
+  const allRatios = ARCANES.map(a => ({ slug: a.slug, ratio: (prices[a.slug]?.price ?? 0) / a.motes })).filter(x => x.ratio > 0)
+  const bestRatioSlugs = new Set(['Legendary','Rare','Uncommon','Common','Ascension'].map(tier => {
+    const inTier = ARCANES.filter(a => a.tier === tier).map(a => ({ slug: a.slug, ratio: (prices[a.slug]?.price ?? 0) / a.motes })).filter(x => x.ratio > 0)
+    return inTier.length ? inTier.sort((a, b) => b.ratio - a.ratio)[0].slug : ''
+  }).filter(Boolean))
+  const globalBest = allRatios.length ? allRatios.sort((a, b) => b.ratio - a.ratio)[0].slug : ''
 
-  let items = ARCANES
-    .filter(a => filter === 'all' || a.tier === filter)
-    .map(a => ({ ...a, pd: prices[a.slug] ?? { price: null } }))
-
-  const getRatio = (item: typeof items[0]) =>
-    item.pd.price && item.motes ? item.pd.price / item.motes : null
+  let items = ARCANES.filter(a => filter === 'all' || a.tier === filter).map(a => ({ ...a, pd: prices[a.slug] ?? { price: null } }))
+  const getRatio = (item: typeof items[0]) => item.pd.price && item.motes ? item.pd.price / item.motes : null
 
   if (sort === 'price-desc') items.sort((a, b) => (b.pd.price ?? -1) - (a.pd.price ?? -1))
   else if (sort === 'price-asc') items.sort((a, b) => (a.pd.price ?? 99999) - (b.pd.price ?? 99999))
@@ -175,43 +254,44 @@ export default function PriceTracker() {
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1rem' }}>
 
-      {/* ── COUNTDOWN ── */}
-      <div style={{ background: countdown.days < 3 ? '#2a1a1a' : '#16161a', border: `1px solid ${countdown.days < 3 ? '#5a2a2a' : '#2a2a2e'}`, borderRadius: 12, padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      {/* Modal grafic mare */}
+      {selectedArcane && (
+        <ChartModal
+          arcane={selectedArcane}
+          pd={prices[selectedArcane.slug] ?? { price: null }}
+          onClose={() => setSelectedArcane(null)}
+        />
+      )}
+
+      {/* Countdown */}
+      <div style={{ background: countdown.days < 3 ? '#2a1a1a' : '#16161a', border: `1px solid ${countdown.days < 3 ? '#5a2a2a' : '#2a2a2e'}`, borderRadius: 12, padding: '14px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>⏱ Timp rămas — Operation: Belly of the Beast</div>
           {countdown.expired
             ? <div style={{ fontSize: 16, color: '#e55', fontWeight: 600 }}>Evenimentul s-a încheiat</div>
             : <div style={{ fontSize: 22, fontWeight: 700, color: countdown.days < 3 ? '#e55' : '#fff', fontVariantNumeric: 'tabular-nums' }}>
                 {countdown.days}z {pad(countdown.hours)}h {pad(countdown.minutes)}m {pad(countdown.seconds)}s
-              </div>
-          }
+              </div>}
         </div>
         <div style={{ fontSize: 11, color: '#555' }}>Scade pe 1 iunie 2026</div>
       </div>
 
-      {/* ── CALCULATOR PROFIT ── */}
-      <div style={{ background: '#16161a', border: '1px solid #2a2a2e', borderRadius: 12, padding: '14px 20px', marginBottom: 20 }}>
+      {/* Calculator */}
+      <div style={{ background: '#16161a', border: '1px solid #2a2a2e', borderRadius: 12, padding: '14px 20px', marginBottom: 16 }}>
         <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 10 }}>🧮 Calculator profit</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 12, color: '#888' }}>Volatile Motes:</span>
-            <input
-              type="number"
-              min="0"
-              value={motesInput}
-              onChange={e => setMotesInput(e.target.value)}
-              placeholder="ex: 100"
-              style={{ width: 90, padding: '5px 10px', borderRadius: 8, border: '1px solid #333', background: '#0d0d0f', color: '#fff', fontSize: 13, outline: 'none' }}
-            />
+            <input type="number" min="0" value={motesInput} onChange={e => setMotesInput(e.target.value)} placeholder="ex: 100"
+              style={{ width: 90, padding: '5px 10px', borderRadius: 8, border: '1px solid #333', background: '#0d0d0f', color: '#fff', fontSize: 13, outline: 'none' }} />
           </div>
           {motes > 0 && status === 'done' && (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {['Legendary', 'Rare', 'Uncommon', 'Common'].map(tier => {
+              {['Legendary','Rare','Uncommon','Common'].map(tier => {
                 const arcane = ARCANES.filter(a => a.tier === tier).find(a => bestRatioSlugs.has(a.slug))
                 if (!arcane) return null
                 const price = prices[arcane.slug]?.price
                 if (!price) return null
-                // 21 copii necesare pentru rank 5 (1+2+3+4+5+6)
                 const COPIES_FOR_R5 = 21
                 const motesPerR5 = arcane.motes * COPIES_FOR_R5
                 const fullR5 = Math.floor(motes / motesPerR5)
@@ -222,28 +302,27 @@ export default function PriceTracker() {
                     <span style={{ color: '#888' }}>{tier}: </span>
                     <span style={{ color: '#fff', fontWeight: 600 }}>{profit} pt</span>
                     <span style={{ color: '#555' }}> ({fullR5}x R5 {arcane.name.replace('Arcane ', '')})</span>
-                    {remainingCopies > 0 && <span style={{ color: '#444' }}> +{remainingCopies} copii extra</span>}
+                    {remainingCopies > 0 && <span style={{ color: '#444' }}> +{remainingCopies} copii</span>}
                     {fullR5 === 0 && <span style={{ color: '#555' }}> (trebuie {motesPerR5} motes/R5)</span>}
                   </div>
                 )
               })}
             </div>
           )}
-          {motes > 0 && status === 'loading' && <span style={{ fontSize: 12, color: '#555' }}>Se încarcă prețurile...</span>}
           {motes === 0 && <span style={{ fontSize: 12, color: '#555' }}>Introdu numărul de motes pentru a vedea profitul estimat</span>}
         </div>
       </div>
 
-      {/* ── HEADER ── */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: '#fff' }}>Arcane Prices</h1>
           <p style={{ margin: '2px 0 0', fontSize: 11, color: '#555' }}>
             {status === 'loading' && `Se încarcă... ${progress}% (${done}/${ARCANES.length})`}
-            {status === 'done' && updatedAt && `Actualizat: ${updatedAt.toLocaleTimeString('ro-RO')} • ${foundCount} prețuri • Media ultimelor 4h`}
+            {status === 'done' && updatedAt && `Actualizat: ${updatedAt.toLocaleTimeString('ro-RO')} • ${foundCount} prețuri • Media 4h • Click pe card pentru grafic`}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <select value={sort} onChange={e => setSort(e.target.value)}
             style={{ fontSize: 12, padding: '6px 10px', borderRadius: 8, border: '1px solid #333', background: '#1a1a1c', color: '#fff', cursor: 'pointer' }}>
             <option value="price-desc">Preț ↓</option>
@@ -272,91 +351,92 @@ export default function PriceTracker() {
             {t === 'all' ? 'Toate' : t}
           </button>
         ))}
-        <div style={{ marginLeft: 'auto', fontSize: 11, color: '#555', alignSelf: 'center' }}>
-          🏆 = best deal per tier &nbsp; ⭐ = best overall
-        </div>
       </div>
 
-      {/* ── GRID ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+      {/* Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 12 }}>
         {items.map(a => {
           const ts = TIER_STYLE[a.tier]
           const pd = a.pd
           const ratio = pd.price && a.motes ? Math.round(pd.price / a.motes) : null
           const isBestInTier = bestRatioSlugs.has(a.slug) && pd.price !== null
           const isGlobalBest = globalBest === a.slug
-          const profitFromMotes = motes > 0 && pd.price
-            ? Math.floor(motes / a.motes) * pd.price
-            : null
+          const borderColor = isGlobalBest ? '#f5c518' : isBestInTier ? '#2a5a2a' : '#2a2a2e'
+          const COPIES_FOR_R5 = 21
+          const motesPerR5 = a.motes * COPIES_FOR_R5
+          const fullR5 = motes > 0 && pd.price ? Math.floor(motes / motesPerR5) : 0
+          const remainingCopies = motes > 0 ? Math.floor((motes % motesPerR5) / a.motes) : 0
+          const profit = fullR5 * (pd.price ?? 0)
 
-          const borderColor = isGlobalBest
-            ? '#f5c518'
-            : isBestInTier
-            ? '#2a5a2a'
-            : '#2a2a2e'
+          // Trending
+          const change = pd.change24h
+          const trendColor = change == null ? '#555' : change > 0 ? '#4caf50' : change < 0 ? '#e55' : '#888'
+          const trendIcon = change == null ? '' : change > 2 ? '↑' : change < -2 ? '↓' : '→'
 
           return (
-            <div key={a.slug} style={{ background: '#16161a', border: `1px solid ${borderColor}`, borderRadius: 12, padding: '14px 16px', position: 'relative' }}>
-              {/* Best badges */}
-              {isGlobalBest && (
-                <div style={{ position: 'absolute', top: 10, right: 10, fontSize: 16 }} title="Best deal overall">⭐</div>
-              )}
-              {isBestInTier && !isGlobalBest && (
-                <div style={{ position: 'absolute', top: 10, right: 10, fontSize: 14 }} title={`Best deal in ${a.tier}`}>🏆</div>
-              )}
+            <div key={a.slug}
+              onClick={() => pd.price !== null && setSelectedArcane(a)}
+              style={{ background: '#16161a', border: `1px solid ${borderColor}`, borderRadius: 12, padding: '14px 16px', cursor: pd.price !== null ? 'pointer' : 'default', transition: 'border-color 0.15s', position: 'relative' }}
+              onMouseEnter={e => pd.price !== null && ((e.currentTarget as HTMLDivElement).style.borderColor = '#3a3a4e')}
+              onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = borderColor)}
+            >
+              {isGlobalBest && <div style={{ position: 'absolute', top: 10, right: 10, fontSize: 16 }} title="Best deal overall">⭐</div>}
+              {isBestInTier && !isGlobalBest && <div style={{ position: 'absolute', top: 10, right: 10, fontSize: 14 }} title={`Best in ${a.tier}`}>🏆</div>}
 
               <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 6, paddingRight: 24 }}>{a.name}</div>
-              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: ts.bg, color: ts.color, display: 'inline-block', marginBottom: 10 }}>{a.tier}</span>
+              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: ts.bg, color: ts.color, display: 'inline-block', marginBottom: 8 }}>{a.tier}</span>
 
-              <div style={{ fontSize: 11, color: '#666', marginBottom: 2 }}>Preț median (4h)</div>
-              <div style={{ fontSize: 22, fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>
-                {pd.price !== null && pd.price !== undefined
-                  ? <>{pd.price} <span style={{ fontSize: 13, color: '#888', fontWeight: 400 }}>pt</span></>
-                  : <span style={{ fontSize: 14, color: '#444' }}>{status === 'loading' ? '...' : '—'}</span>}
+              {/* Sparkline */}
+              {pd.history && pd.history.length >= 2 && (
+                <div style={{ marginBottom: 6 }}>
+                  <Sparkline data={pd.history} w={80} h={24} />
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: '#666', marginBottom: 1 }}>Preț median (4h)</div>
+                  <div style={{ fontSize: 20, fontWeight: 600, color: '#fff', lineHeight: 1.2 }}>
+                    {pd.price !== null && pd.price !== undefined
+                      ? <>{pd.price} <span style={{ fontSize: 12, color: '#888', fontWeight: 400 }}>pt</span></>
+                      : <span style={{ fontSize: 14, color: '#444' }}>{status === 'loading' ? '...' : '—'}</span>}
+                  </div>
+                </div>
+                {/* Trending badge */}
+                {trendIcon && change !== null && (
+                  <div style={{ fontSize: 12, color: trendColor, fontWeight: 600, marginBottom: 2 }}>
+                    {trendIcon} {Math.abs(change)}%
+                  </div>
+                )}
               </div>
 
               {pd.min !== undefined && pd.max !== undefined && pd.price !== null && (
-                <div style={{ fontSize: 11, color: '#555', marginTop: 3 }}>
-                  {pd.min} – {pd.max} pt
-                  {pd.entries !== undefined && <span style={{ color: '#444' }}> ({pd.entries} trz.)</span>}
-                </div>
+                <div style={{ fontSize: 11, color: '#444', marginTop: 2 }}>{pd.min} – {pd.max} pt</div>
               )}
 
               <div style={{ fontSize: 11, color: '#666', marginTop: 6 }}>
                 {a.tier === 'Ascension' ? `${a.motes} Vestigial Motes` : `${a.motes} Volatile Mote${a.motes > 1 ? 's' : ''}`}
               </div>
-              {ratio && <div style={{ fontSize: 11, color: isBestInTier ? '#4caf50' : '#555', marginTop: 2, fontWeight: isBestInTier ? 600 : 400 }}>~{ratio} pt/mote</div>}
+              {ratio && <div style={{ fontSize: 11, color: isBestInTier ? '#4caf50' : '#555', marginTop: 1, fontWeight: isBestInTier ? 600 : 400 }}>~{ratio} pt/mote</div>}
 
-              {/* Profit din motes introduse */}
-              {motes > 0 && pd.price !== null && (() => {
-                const COPIES_FOR_R5 = 21
-                const motesPerR5 = a.motes * COPIES_FOR_R5
-                const fullR5 = Math.floor(motes / motesPerR5)
-                const remaining = Math.floor((motes % motesPerR5) / a.motes)
-                const profit = fullR5 * (pd.price ?? 0)
-                if (fullR5 === 0) return (
-                  <div style={{ marginTop: 6, padding: '4px 8px', background: '#1a1a0d', borderRadius: 6, fontSize: 11, color: '#888' }}>
-                    Trebuie {motesPerR5} motes pentru 1x R5
-                  </div>
-                )
-                return (
-                  <div style={{ marginTop: 6, padding: '4px 8px', background: '#0d1a0d', borderRadius: 6, fontSize: 12, color: '#4caf50' }}>
-                    {profit} pt ({fullR5}x R5{remaining > 0 ? ` +${remaining} copii` : ''})
-                  </div>
-                )
-              })()}
+              {motes > 0 && pd.price !== null && (
+                <div style={{ marginTop: 6, padding: '4px 8px', background: fullR5 > 0 ? '#0d1a0d' : '#1a1a0d', borderRadius: 6, fontSize: 11, color: fullR5 > 0 ? '#4caf50' : '#888' }}>
+                  {fullR5 > 0
+                    ? `${profit} pt (${fullR5}x R5${remainingCopies > 0 ? ` +${remainingCopies}` : ''})`
+                    : `Trebuie ${motesPerR5} motes/R5`}
+                </div>
+              )}
 
-              <a href={`https://warframe.market/items/${a.slug}`} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: 11, color: '#5a8dee', textDecoration: 'none', marginTop: 6, display: 'inline-block' }}>
-                warframe.market ↗
-              </a>
+              {pd.price !== null && (
+                <div style={{ fontSize: 10, color: '#333', marginTop: 6 }}>click pentru grafic</div>
+              )}
             </div>
           )
         })}
       </div>
 
       <div style={{ marginTop: 24, fontSize: 11, color: '#444', textAlign: 'center' }}>
-        Sursa: warframe.market statistics • Media tranzacțiilor din ultimele 4h la Rank 5
+        Sursa: warframe.market statistics • Media 4h la Rank 5 • ↑↓ = variație față de 24h în urmă
       </div>
     </div>
   )
