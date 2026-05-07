@@ -3,11 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 
 const ARCANES = [
-  // Legendary — 30 Volatile Motes
   { name: 'Arcane Energize',     slug: 'arcane_energize',     tier: 'Legendary', motes: 30 },
   { name: 'Arcane Grace',        slug: 'arcane_grace',        tier: 'Legendary', motes: 30 },
   { name: 'Arcane Barrier',      slug: 'arcane_barrier',      tier: 'Legendary', motes: 30 },
-  // Rare — 6 Volatile Motes
   { name: 'Arcane Aegis',        slug: 'arcane_aegis',        tier: 'Rare',      motes: 6  },
   { name: 'Arcane Arachne',      slug: 'arcane_arachne',      tier: 'Rare',      motes: 6  },
   { name: 'Arcane Avenger',      slug: 'arcane_avenger',      tier: 'Rare',      motes: 6  },
@@ -16,7 +14,6 @@ const ARCANES = [
   { name: 'Arcane Pulse',        slug: 'arcane_pulse',        tier: 'Rare',      motes: 6  },
   { name: 'Arcane Rage',         slug: 'arcane_rage',         tier: 'Rare',      motes: 6  },
   { name: 'Arcane Ultimatum',    slug: 'arcane_ultimatum',    tier: 'Rare',      motes: 6  },
-  // Uncommon — 4 Volatile Motes
   { name: 'Arcane Victory',      slug: 'arcane_victory',      tier: 'Uncommon',  motes: 4  },
   { name: 'Arcane Strike',       slug: 'arcane_strike',       tier: 'Uncommon',  motes: 4  },
   { name: 'Arcane Awakening',    slug: 'arcane_awakening',    tier: 'Uncommon',  motes: 4  },
@@ -27,18 +24,15 @@ const ARCANES = [
   { name: 'Arcane Acceleration', slug: 'arcane_acceleration', tier: 'Uncommon',  motes: 4  },
   { name: 'Arcane Trickery',     slug: 'arcane_trickery',     tier: 'Uncommon',  motes: 4  },
   { name: 'Arcane Velocity',     slug: 'arcane_velocity',     tier: 'Uncommon',  motes: 4  },
-  // Uncommon — 2 Volatile Motes
   { name: 'Arcane Deflection',   slug: 'arcane_deflection',   tier: 'Uncommon',  motes: 2  },
   { name: 'Arcane Healing',      slug: 'arcane_healing',      tier: 'Uncommon',  motes: 2  },
   { name: 'Arcane Resistance',   slug: 'arcane_resistance',   tier: 'Uncommon',  motes: 2  },
-  // Common — 2 Volatile Motes
   { name: 'Arcane Nullifier',    slug: 'arcane_nullifier',    tier: 'Common',    motes: 2  },
   { name: 'Arcane Warmth',       slug: 'arcane_warmth',       tier: 'Common',    motes: 2  },
   { name: 'Arcane Ice',          slug: 'arcane_ice',          tier: 'Common',    motes: 2  },
   { name: 'Arcane Momentum',     slug: 'arcane_momentum',     tier: 'Common',    motes: 2  },
   { name: 'Arcane Tempo',        slug: 'arcane_tempo',        tier: 'Common',    motes: 2  },
   { name: 'Arcane Consequence',  slug: 'arcane_consequence',  tier: 'Common',    motes: 2  },
-  // Ascension — 10 Vestigial Motes
   { name: 'Arcane Ice Storm',    slug: 'arcane_ice_storm',    tier: 'Ascension', motes: 10 },
   { name: 'Arcane Battery',      slug: 'arcane_battery',      tier: 'Ascension', motes: 10 },
   { name: 'Secondary Surge',     slug: 'secondary_surge',     tier: 'Ascension', motes: 10 },
@@ -273,7 +267,7 @@ export default function PriceTracker() {
                 {countdown.days}z {pad(countdown.hours)}h {pad(countdown.minutes)}m {pad(countdown.seconds)}s
               </div>}
         </div>
-        <div style={{ fontSize: 11, color: '#555' }}>Scade pe 1 iunie 2026</div>
+        <div style={{ fontSize: 11, color: '#555' }}>Se termina pe 1 iunie 2026</div>
       </div>
 
       {/* Calculator */}
