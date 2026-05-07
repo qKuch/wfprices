@@ -405,7 +405,7 @@ export default function PriceTracker() {
                 {/* Trending badge */}
                 {trendIcon && change !== null && (
                   <div style={{ fontSize: 12, color: trendColor, fontWeight: 600, marginBottom: 2 }}>
-                    {trendIcon} {Math.abs(change)}%
+                    {trendIcon} {Math.abs(change as number)}%
                   </div>
                 )}
               </div>
