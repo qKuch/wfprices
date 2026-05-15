@@ -38,6 +38,7 @@ const ARCANES = [
   { name: 'Secondary Surge',     slug: 'secondary_surge',     tier: 'Ascension', motes: 10 },
   { name: 'Secondary Fortifier', slug: 'secondary_fortifier', tier: 'Ascension', motes: 10 },
   { name: 'Melee Afflictions',   slug: 'melee_afflictions',   tier: 'Ascension', motes: 10 },
+  { name: 'Arcane Impetus',      slug: 'arcane_impetus',      tier: 'Special',   motes: 0 },
 ]
 
 const EVENT_END = new Date('2026-06-01T23:59:59Z')
@@ -48,6 +49,7 @@ const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Uncommon:  { bg: '#0C447C', color: '#B5D4F4' },
   Common:    { bg: '#3a3a38', color: '#D3D1C7' },
   Ascension: { bg: '#085041', color: '#9FE1CB' },
+  Ascension: { bg: '#ffffff', color: '#000000' },
 }
 
 interface PriceData {
@@ -221,7 +223,7 @@ export default function PriceTracker() {
 
   useEffect(() => { loadPrices() }, [loadPrices])
 
-  const tiers = ['all', 'Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension']
+  const tiers = ['all', 'Legendary', 'Rare', 'Uncommon', 'Common', 'Ascension', 'Special']
   const foundCount = Object.values(prices).filter(v => v.price !== null).length
   const progress = Math.round((done / ARCANES.length) * 100)
   const motes = parseInt(motesInput) || 0
