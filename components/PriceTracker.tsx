@@ -38,7 +38,7 @@ const ARCANES = [
   { name: 'Secondary Surge',     slug: 'secondary_surge',     tier: 'Ascension', motes: 10 },
   { name: 'Secondary Fortifier', slug: 'secondary_fortifier', tier: 'Ascension', motes: 10 },
   { name: 'Melee Afflictions',   slug: 'melee_afflictions',   tier: 'Ascension', motes: 10 },
-  { name: 'Arcane Impetus',      slug: 'arcane_impetus',      tier: 'Special',   motes: 0 },
+  { name: 'Arcane Impetus',      slug: 'arcane_impetus',      tier: 'Special',   motes: 1 },
 ]
 
 const EVENT_END = new Date('2026-06-01T23:59:59Z')
