@@ -49,7 +49,7 @@ const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Uncommon:  { bg: '#0C447C', color: '#B5D4F4' },
   Common:    { bg: '#3a3a38', color: '#D3D1C7' },
   Ascension: { bg: '#085041', color: '#9FE1CB' },
-  Ascension: { bg: '#ffffff', color: '#000000' },
+  Special: { bg: '#ffffff', color: '#000000' },
 }
 
 interface PriceData {
