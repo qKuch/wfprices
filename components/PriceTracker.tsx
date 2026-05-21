@@ -38,18 +38,25 @@ const ARCANES = [
   { name: 'Secondary Surge',     slug: 'secondary_surge',     tier: 'Ascension', motes: 10 },
   { name: 'Secondary Fortifier', slug: 'secondary_fortifier', tier: 'Ascension', motes: 10 },
   { name: 'Melee Afflictions',   slug: 'melee_afflictions',   tier: 'Ascension', motes: 10 },
+  { name: 'Secondary Enervate',  slug: 'secondary_enervate',  tier: 'Special',   motes: 1 },
+  { name: 'Arcane Crepuscular',  slug: 'arcane_crepuscular',  tier: 'Special',   motes: 1 },
+  { name: 'Arcane Truculence',   slug: 'arcane_truculence',   tier: 'Special',   motes: 1 },
+  { name: 'Arcane Belicose',     slug: 'arcane_belicose',     tier: 'Special',   motes: 1 },
+  { name: 'Arcane Camisado',     slug: 'arcane_camisado',     tier: 'Special',   motes: 1 },
+  { name: 'Primary Crux',        slug: 'primary_crux',        tier: 'Special',   motes: 1 },
+  { name: 'Melee Doughty',       slug: 'melee_doughty',       tier: 'Special',   motes: 1 },
   { name: 'Arcane Impetus',      slug: 'arcane_impetus',      tier: 'Special',   motes: 1 },
 ]
 
 const EVENT_END = new Date('2026-06-01T23:59:59Z')
-const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4 }
+const TIER_ORDER: Record<string, number> = { Legendary: 0, Rare: 1, Uncommon: 2, Common: 3, Ascension: 4, Special: 5 }
 const TIER_STYLE: Record<string, { bg: string; color: string }> = {
   Legendary: { bg: '#3C3489', color: '#CECBF6' },
   Rare:      { bg: '#633806', color: '#FAC775' },
   Uncommon:  { bg: '#0C447C', color: '#B5D4F4' },
   Common:    { bg: '#3a3a38', color: '#D3D1C7' },
   Ascension: { bg: '#085041', color: '#9FE1CB' },
-  Special: { bg: '#ffffff', color: '#000000' },
+  Special:   { bg: '#ffffff', color: '#000000' },
 }
 
 interface PriceData {
