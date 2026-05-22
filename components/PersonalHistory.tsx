@@ -71,7 +71,7 @@ export default function PersonalHistory() {
   const deleteTx = (id: string) => setTxs(prev => prev.filter(t => t.id !== id))
 
   const filtered = filterArcane === 'all' ? txs : txs.filter(t => t.arcane === filterArcane)
-  const uniqueArcanes = [...new Set(txs.map(t => t.arcane))].sort()
+  const uniqueArcanes = Array.from(new Set(txs.map(t => t.arcane))).sort()
 
   // P&L globale
   const totalSpent = txs.filter(t => t.type === 'buy').reduce((s, t) => s + t.price * t.qty, 0)
