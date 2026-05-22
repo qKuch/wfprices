@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 
 interface Arcane {
   name: string
@@ -322,6 +322,47 @@ function useCountdown(target: Date) {
   return time
 }
 
+function FlipCalcInline() {
+  const [buy, setBuy] = React.useState('')
+  const [sell, setSell] = React.useState('')
+  const [qty, setQty] = React.useState('1')
+  const b = parseFloat(buy)||0, s = parseFloat(sell)||0, q = parseInt(qty)||1
+  const tax = Math.ceil(s*0.1), net = s - tax
+  const profit = (net*q) - (b*q)
+  const roi = b*q > 0 ? ((profit/(b*q))*100).toFixed(1) : null
+  const breakEven = b > 0 ? Math.ceil(b/0.9) : null
+  const pc = profit > 0 ? '#4caf50' : profit < 0 ? '#e55' : '#888'
+  const inp = { padding:'7px 11px', borderRadius:8, border:'1px solid #2a2a2e', background:'#0d0d0f', color:'#fff', fontSize:13, outline:'none', width:'100%', boxSizing:'border-box' as const }
+  return (
+    <div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:16}}>
+        {[['Cumpărare (pt)',buy,setBuy],['Vânzare (pt)',sell,setSell],['Cantitate',qty,setQty]].map(([label,val,setter])=>(
+          <div key={label as string}>
+            <div style={{fontSize:11,color:'#666',marginBottom:5}}>{label as string}</div>
+            <input type="number" min="0" value={val as string} onChange={e=>(setter as any)(e.target.value)} style={inp}/>
+          </div>
+        ))}
+      </div>
+      {(b>0||s>0)&&(
+        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+          {[
+            {l:'Taxă (10%)',v:`${tax} pt`,c:'#e55'},
+            {l:'Net/vânzare',v:`${net} pt`,c:'#fff'},
+            {l:'Profit net',v:`${profit>0?'+':''}${profit} pt`,c:pc},
+            {l:'ROI',v:roi?`${parseFloat(roi)>0?'+':''}${roi}%`:'—',c:pc},
+            ...(breakEven?[{l:'Break-even',v:`${breakEven} pt`,c:'#5a8dee'}]:[]),
+          ].map(({l,v,c})=>(
+            <div key={l} style={{background:'#0d0d0f',borderRadius:8,padding:'8px 12px',border:'1px solid #1e1e22'}}>
+              <div style={{fontSize:10,color:'#555',marginBottom:3}}>{l}</div>
+              <div style={{fontSize:14,fontWeight:600,color:c}}>{v}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const CONCURRENCY = 6
 
 export default function PriceTracker() {
@@ -455,6 +496,17 @@ export default function PriceTracker() {
           {motes===0&&<span style={{fontSize:12,color:'#555'}}>Introdu numărul de motes pentru profit estimat</span>}
         </div>
       </div>
+
+      {/* Flip Calculator */}
+      <details style={{ marginBottom: 16 }}>
+        <summary style={{ background: '#16161a', border: '1px solid #2a2a2e', borderRadius: 12, padding: '12px 20px', cursor: 'pointer', fontSize: 13, fontWeight: 500, color: '#ccc', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>🔄 Flip Calculator</span>
+          <span style={{ fontSize: 11, color: '#555' }}>click pentru a deschide</span>
+        </summary>
+        <div style={{ background: '#16161a', border: '1px solid #2a2a2e', borderTop: 'none', borderRadius: '0 0 12px 12px', padding: 20 }}>
+          <FlipCalcInline />
+        </div>
+      </details>
 
       {/* Header */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem',flexWrap:'wrap',gap:10}}>

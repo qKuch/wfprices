@@ -1,2 +1,2 @@
-import PriceTracker from '../components/PriceTracker'
-export default function Home() { return <PriceTracker /> }
+import LandingPage from '../components/LandingPage'
+export default function Home() { return <LandingPage /> }
