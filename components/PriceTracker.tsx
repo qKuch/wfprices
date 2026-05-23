@@ -162,7 +162,7 @@ const SYNDICATE_FILTERS = ['Ostron','The Quills','Solaris United','Vox Solaris',
 
 interface PriceData {
   price: number | null; min?: number | null; max?: number | null
-  entries?: number; history?: { t: string; v: number }[]; change24h?: number | null
+  entries?: number; history?: { t: string; v: number }[]; change24h?: number | null; volume?: number
 }
 
 // ── Sparkline ───────────────────────────────────────────────
