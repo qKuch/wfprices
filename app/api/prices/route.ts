@@ -33,7 +33,10 @@ function processStats(entries: any[]) {
     const yp = yesterday.map((e: any) => e.median ?? e.avg_price).filter((p: any) => p).sort((a: number, b: number) => a - b)
     if (yp.length) { const ym = Math.floor(yp.length / 2); const yPrice = yp.length % 2 !== 0 ? yp[ym] : (yp[ym-1]+yp[ym])/2; change24h = Math.round(((price - yPrice) / yPrice) * 100) }
   }
-  return { price, min: prices[0], max: prices[prices.length - 1], entries: pool.length, history, change24h }
+  // Total volume in last 48h at max rank
+  const volume48h = atMax.reduce((sum: number, e: any) => sum + (e.volume ?? 0), 0)
+
+  return { price, min: prices[0], max: prices[prices.length - 1], entries: pool.length, history, change24h, volume: volume48h }
 }
 async function fetchSlug(slug: string): Promise<any> {
   try {

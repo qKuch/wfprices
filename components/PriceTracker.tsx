@@ -218,9 +218,10 @@ function ChartModal({ arcane, pd, onClose }: { arcane:Arcane; pd:PriceData; onCl
 }
 
 // ── Card normal ─────────────────────────────────────────────
-function ArcaneCard({ a, pd, status, motes, isBestInTier, isGlobalBest, onSelect }: {
+function ArcaneCard({ a, pd, status, motes, isBestInTier, isGlobalBest, onSelect, isFav, onToggleFav }: {
   a: Arcane; pd: PriceData; status: string; motes: number
   isBestInTier: boolean; isGlobalBest: boolean; onSelect: ()=>void
+  isFav: boolean; onToggleFav: ()=>void
 }) {
   const isSyndicate = a.tier === 'Syndicate'
   const isSpecial   = a.tier === 'Special'
@@ -240,8 +241,12 @@ function ArcaneCard({ a, pd, status, motes, isBestInTier, isGlobalBest, onSelect
       onMouseLeave={e=>((e.currentTarget as HTMLDivElement).style.borderColor=borderColor)}
       style={{background:'#16161a',border:`1px solid ${borderColor}`,borderRadius:12,padding:'14px 16px',cursor:pd.price!==null?'pointer':'default',position:'relative',transition:'border-color 0.15s'}}
     >
-      {isGlobalBest&&<div style={{position:'absolute',top:10,right:10,fontSize:16}}>⭐</div>}
-      {isBestInTier&&!isGlobalBest&&<div style={{position:'absolute',top:10,right:10,fontSize:14}}>🏆</div>}
+      {isGlobalBest&&<div style={{position:'absolute',top:10,right:32,fontSize:16}}>⭐</div>}
+      {isBestInTier&&!isGlobalBest&&<div style={{position:'absolute',top:10,right:32,fontSize:14}}>🏆</div>}
+      <button onClick={e=>{e.stopPropagation();onToggleFav()}} title={isFav?'Scoate din favorite':'Adaugă la favorite'}
+        style={{position:'absolute',top:8,right:8,background:'none',border:'none',fontSize:16,cursor:'pointer',color:isFav?'#f5c518':'#333',padding:2,lineHeight:1}}>
+        {isFav?'★':'☆'}
+      </button>
       <div style={{fontSize:13,fontWeight:500,color:'#fff',marginBottom:4,paddingRight:24}}>{a.name}</div>
       <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:8}}>
         {isSyndicate&&a.syndicate?(
@@ -260,6 +265,9 @@ function ArcaneCard({ a, pd, status, motes, isBestInTier, isGlobalBest, onSelect
         {trendIcon&&change!=null&&<div style={{fontSize:12,color:trendColor,fontWeight:600}}>{trendIcon} {Math.abs(change as number)}%</div>}
       </div>
       {pd.min!=null&&pd.max!=null&&pd.price!=null&&<div style={{fontSize:11,color:'#444',marginTop:2}}>{pd.min} – {pd.max} pt</div>}
+      {pd.volume!=null&&<div style={{fontSize:11,marginTop:2,color:pd.volume>=10?'#4caf50':pd.volume>=3?'#888':'#e55'}}>
+        {'●'} {pd.volume} tranzacții/48h{pd.volume<3?' · greu de vândut':''}
+      </div>}
       {showMotes&&<div style={{fontSize:11,color:'#666',marginTop:6}}>{a.tier==='Ascension'?`${a.motes} Vestigial Motes`:`${a.motes} Volatile Mote${a.motes!>1?'s':''}`}</div>}
       {isSyndicate&&a.cost&&<div style={{fontSize:11,color:'#666',marginTop:6}}>{a.cost.toLocaleString()} standing</div>}
       {ratio&&showMotes&&<div style={{fontSize:11,color:isBestInTier?'#4caf50':'#555',marginTop:1,fontWeight:isBestInTier?600:400}}>~{ratio} pt/mote</div>}
@@ -274,9 +282,10 @@ function ArcaneCard({ a, pd, status, motes, isBestInTier, isGlobalBest, onSelect
 }
 
 // ── Rând compact ────────────────────────────────────────────
-function CompactRow({ a, pd, status, isBestInTier, isGlobalBest, onSelect }: {
+function CompactRow({ a, pd, status, isBestInTier, isGlobalBest, onSelect, isFav, onToggleFav }: {
   a: Arcane; pd: PriceData; status: string
   isBestInTier: boolean; isGlobalBest: boolean; onSelect: ()=>void
+  isFav: boolean; onToggleFav: ()=>void
 }) {
   const isSyndicate = a.tier === 'Syndicate'
   const ts = isSyndicate && a.syndicate ? SYNDICATE_STYLE[a.syndicate] : TIER_STYLE[a.tier]
@@ -291,9 +300,18 @@ function CompactRow({ a, pd, status, isBestInTier, isGlobalBest, onSelect }: {
       onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.background='transparent'}
     >
       <div style={{fontSize:14,textAlign:'center'}}>{isGlobalBest?'⭐':isBestInTier?'🏆':''}</div>
-      <div>
-        <div style={{color:'#fff',fontWeight:500}}>{a.name}</div>
-        <span style={{fontSize:10,padding:'1px 6px',borderRadius:3,background:ts.bg,color:ts.color}}>{a.syndicate??a.tier}</span>
+      <div style={{display:'flex',alignItems:'center',gap:6}}>
+        <button onClick={e=>{e.stopPropagation();onToggleFav()}}
+          style={{background:'none',border:'none',fontSize:13,cursor:'pointer',color:isFav?'#f5c518':'#333',padding:0,lineHeight:1,flexShrink:0}}>
+          {isFav?'★':'☆'}
+        </button>
+        <div>
+          <div style={{color:'#fff',fontWeight:500}}>{a.name}</div>
+          <div style={{display:'flex',gap:4,alignItems:'center'}}>
+            <span style={{fontSize:10,padding:'1px 6px',borderRadius:3,background:ts.bg,color:ts.color}}>{a.syndicate??a.tier}</span>
+            {pd.volume!=null&&<span style={{fontSize:10,color:pd.volume>=10?'#4caf50':pd.volume>=3?'#666':'#e55'}}>● {pd.volume}/48h</span>}
+          </div>
+        </div>
       </div>
       <div style={{textAlign:'right'}}>
         {pd.history&&pd.history.length>=2&&<Sparkline data={pd.history} w={70} h={20}/>}
@@ -427,8 +445,10 @@ export default function PriceTracker() {
     else if (sort==='ratio-desc') items.sort((a,b)=>(getRatio(b)??-1)-(getRatio(a)??-1))
     else if (sort==='name') items.sort((a,b)=>a.name.localeCompare(b.name))
     else if (sort==='tier') items.sort((a,b)=>TIER_ORDER[a.tier]-TIER_ORDER[b.tier])
+    // Favorites always first (unless in favorites-only mode)
+    if (!showFavOnly) items.sort((a,b)=>(favorites.has(b.slug)?1:0)-(favorites.has(a.slug)?1:0))
     return items
-  },[filteredItems,sort])
+  },[filteredItems,sort,favorites,showFavOnly])
 
   // ── Grupuri pentru afișarea "Toate" ───────────────────────
   const groupedItems = useMemo(()=>{
@@ -449,6 +469,8 @@ export default function PriceTracker() {
     isBestInTier:bestRatioSlugs.has(a.slug)&&a.pd.price!==null,
     isGlobalBest:globalBest===a.slug,
     onSelect:()=>setSelected(a),
+    isFav:favorites.has(a.slug),
+    onToggleFav:()=>toggleFav(a.slug),
   })
 
   return (
