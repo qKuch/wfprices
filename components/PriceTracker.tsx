@@ -394,7 +394,22 @@ export default function PriceTracker() {
   const [selected,setSelected] = useState<Arcane|null>(null)
   const [search,setSearch]   = useState('')
   const [compact,setCompact] = useState(false)
+  const [favorites,setFavorites] = useState<Set<string>>(new Set())
+  const [showFavOnly,setShowFavOnly] = useState(false)
   const countdown = useCountdown(EVENT_END)
+
+  useEffect(()=>{
+    try { const s=localStorage.getItem('wf_favorites'); if(s) setFavorites(new Set(JSON.parse(s))) } catch {}
+  },[])
+
+  const toggleFav = (slug:string) => {
+    setFavorites(prev=>{
+      const n=new Set(prev)
+      n.has(slug)?n.delete(slug):n.add(slug)
+      localStorage.setItem('wf_favorites',JSON.stringify([...n]))
+      return n
+    })
+  }
 
   const loadPrices = useCallback(async () => {
     setStatus('loading'); setDone(0); setPrices({})
@@ -433,8 +448,9 @@ export default function PriceTracker() {
       list=list.filter(a=>a.name.toLowerCase().includes(q))
     }
 
+    if (showFavOnly) list=list.filter(a=>favorites.has(a.slug))
     return list.map(a=>({...a,pd:prices[a.slug]??{price:null}}))
-  },[filter,search,prices])
+  },[filter,search,prices,showFavOnly,favorites])
 
   const sortedItems = useMemo(()=>{
     const items=[...filteredItems]
@@ -558,6 +574,10 @@ export default function PriceTracker() {
             <option value="name">Nume A-Z</option>
             <option value="tier">Tier</option>
           </select>
+          <button onClick={()=>setShowFavOnly(f=>!f)}
+            style={{fontSize:12,padding:'6px 12px',borderRadius:8,border:`1px solid ${showFavOnly?'#f5c518':'#333'}`,background:showFavOnly?'#2a2a10':'transparent',color:showFavOnly?'#f5c518':'#888',cursor:'pointer'}}>
+            {showFavOnly?'⭐ Favorite':'☆ Favorite'}{!showFavOnly&&favorites.size>0&&<span style={{marginLeft:4,fontSize:10,background:'#2a2a10',color:'#f5c518',padding:'1px 5px',borderRadius:8}}>{favorites.size}</span>}
+          </button>
           {/* Compact toggle */}
           <button onClick={()=>setCompact(c=>!c)}
             style={{fontSize:12,padding:'6px 12px',borderRadius:8,border:`1px solid ${compact?'#5a8dee':'#333'}`,background:compact?'#1a2a44':'transparent',color:compact?'#5a8dee':'#888',cursor:'pointer'}}>
