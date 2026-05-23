@@ -372,7 +372,7 @@ export default function PriceTracker() {
     setFavorites(prev=>{
       const n=new Set(prev)
       n.has(slug)?n.delete(slug):n.add(slug)
-      localStorage.setItem('wf_favorites',JSON.stringify([...n]))
+      localStorage.setItem('wf_favorites',JSON.stringify(Array.from(n)))
       return n
     })
   }
