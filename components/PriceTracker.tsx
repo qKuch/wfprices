@@ -10,7 +10,6 @@ interface PriceData {
 }
 
 const EVENT_END = EVENT.endDate
-const COPIES_FOR_R5 = EVENT.copiesForR5
 const TIER_ORDER: Record<string,number> = { Legendary:0,Rare:1,Uncommon:2,Common:3,Ascension:4,Special:5,Syndicate:6 }
 const TIER_STYLE: Record<string,{bg:string;color:string}> = {
   Legendary:{bg:'#3C3489',color:'#CECBF6'}, Rare:{bg:'#633806',color:'#FAC775'},
@@ -125,22 +124,20 @@ function FlipCalcInline() {
   )
 }
 
-function ArcaneCard({a,pd,status,motes,isBestInTier,isGlobalBest,onSelect,isFav,onToggleFav}:{
-  a:Arcane;pd:PriceData;status:string;motes:number
+function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onToggleFav}:{
+  a:Arcane;pd:PriceData;status:string;
   isBestInTier:boolean;isGlobalBest:boolean;onSelect:()=>void;isFav:boolean;onToggleFav:()=>void
 }) {
   const isSyndicate=a.tier==='Syndicate',isSpecial=a.tier==='Special'
-  const showMotes=!isSyndicate&&!isSpecial&&!!a.motes
   const ts=isSyndicate&&a.syndicate?SYNDICATE_STYLE[a.syndicate]:TIER_STYLE[a.tier]
-  const ratio=pd.price&&a.motes?Math.round(pd.price/a.motes):null
   const borderColor=isGlobalBest?'#f5c518':isBestInTier?'#2a5a2a':isFav?'#3a3a10':'#2a2a2e'
-  const motesPerR5=a.motes?a.motes*COPIES_FOR_R5:0
-  const fullR5=motes>0&&a.motes&&pd.price?Math.floor(motes/motesPerR5):0
-  const rem=motes>0&&a.motes?Math.floor((motes%motesPerR5)/a.motes):0
   const change=pd.change24h??null
   const trendColor=change==null?'#555':change>2?'#4caf50':change<-2?'#e55':'#888'
   const trendIcon=change==null?'':change>2?'↑':change<-2?'↓':'→'
   const volColor=pd.volume!=null?(pd.volume>=10?'#4caf50':pd.volume>=3?'#666':'#e55'):'#444'
+  const [qty,setQty]=React.useState('')
+  const qtyN=parseInt(qty)||0
+  const profit=pd.price&&qtyN>0?Math.round(qtyN*pd.price*0.9):null
   return (
     <div onClick={()=>pd.price!==null&&onSelect()}
       onMouseEnter={e=>pd.price!==null&&((e.currentTarget as HTMLDivElement).style.borderColor='#3a3a4e')}
@@ -172,12 +169,18 @@ function ArcaneCard({a,pd,status,motes,isBestInTier,isGlobalBest,onSelect,isFav,
       </div>
       {pd.min!=null&&pd.max!=null&&pd.price!=null&&<div style={{fontSize:11,color:'#444',marginTop:2}}>{pd.min} – {pd.max} pt</div>}
       {pd.volume!=null&&<div style={{fontSize:11,marginTop:2,color:volColor}}>● {pd.volume} tranzacții/48h{pd.volume<3?' · greu de vândut':''}</div>}
-      {showMotes&&<div style={{fontSize:11,color:'#666',marginTop:6}}>{a.motes} {EVENT.tierCurrency(a.tier)}</div>}
       {isSyndicate&&a.cost&&<div style={{fontSize:11,color:'#666',marginTop:6}}>{a.cost.toLocaleString()} standing</div>}
-      {ratio&&showMotes&&<div style={{fontSize:11,color:isBestInTier?'#4caf50':'#555',marginTop:1,fontWeight:isBestInTier?600:400}}>~{ratio} pt/mote</div>}
-      {showMotes&&motes>0&&pd.price!=null&&(
-        <div style={{marginTop:6,padding:'4px 8px',background:fullR5>0?'#0d1a0d':'#1a1a0d',borderRadius:6,fontSize:11,color:fullR5>0?'#4caf50':'#888'}}>
-          {fullR5>0?`${fullR5*pd.price} pt (${fullR5}x R5${rem>0?` +${rem}`:''})`:`Trebuie ${motesPerR5} motes/R5`}
+      {/* Mini flip calc */}
+      {pd.price!=null&&(
+        <div style={{marginTop:10,borderTop:'1px solid #222',paddingTop:8}} onClick={e=>e.stopPropagation()}>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <span style={{fontSize:11,color:'#555'}}>Qty:</span>
+            <input type="number" min="1" value={qty} onChange={e=>setQty(e.target.value)} placeholder="0"
+              style={{width:52,padding:'3px 7px',borderRadius:6,border:'1px solid #2a2a2e',background:'#0d0d0f',color:'#fff',fontSize:12,outline:'none'}}/>
+            {profit!=null&&profit>0&&(
+              <span style={{fontSize:12,color:'#4caf50',fontWeight:600}}>→ {profit} pt <span style={{fontSize:10,color:'#555',fontWeight:400}}>(−10% taxă)</span></span>
+            )}
+          </div>
         </div>
       )}
       {pd.price!=null&&<div style={{fontSize:10,color:'#333',marginTop:6}}>click pentru grafic</div>}
@@ -271,7 +274,6 @@ export default function PriceTracker() {
   const [filter,setFilter]=useState('all')
   const [sort,setSort]=useState('price-desc')
   const [done,setDone]=useState(0)
-  const [motesInput,setMotesInput]=useState('')
   const [selected,setSelected]=useState<Arcane|null>(null)
   const searchParams = useSearchParams()
   const [search,setSearch]=useState(()=>searchParams.get('search')??'')
@@ -308,14 +310,13 @@ export default function PriceTracker() {
 
   const foundCount=Object.values(prices).filter(v=>v.price!==null).length
   const progress=Math.round((done/ARCANES.length)*100)
-  const motes=parseInt(motesInput)||0
 
-  const allRatios=ARCANES.filter(a=>a.motes).map(a=>({slug:a.slug,ratio:(prices[a.slug]?.price??0)/a.motes!})).filter(x=>x.ratio>0)
-  const bestRatioSlugs=new Set(['Legendary','Rare','Uncommon','Common','Ascension'].map(tier=>{
-    const inTier=ARCANES.filter(a=>a.tier===tier&&a.motes).map(a=>({slug:a.slug,ratio:(prices[a.slug]?.price??0)/a.motes!})).filter(x=>x.ratio>0)
-    return inTier.length?inTier.sort((a,b)=>b.ratio-a.ratio)[0].slug:''
+  const validPrices=ARCANES.filter(a=>prices[a.slug]?.price!=null).map(a=>({slug:a.slug,price:prices[a.slug].price!,tier:(ARCANES.find(x=>x.slug===a.slug)?.tier??'')}))
+  const bestInTierSlugs=new Set(['Legendary','Rare','Uncommon','Common','Ascension','Syndicate'].map(tier=>{
+    const inTier=validPrices.filter(x=>x.tier===tier)
+    return inTier.length?[...inTier].sort((a,b)=>b.price-a.price)[0].slug:''
   }).filter(Boolean))
-  const globalBest=allRatios.length?[...allRatios].sort((a,b)=>b.ratio-a.ratio)[0].slug:''
+  const globalBest=validPrices.length?[...validPrices].sort((a,b)=>b.price-a.price)[0].slug:''
 
   const filteredItems=useMemo(()=>{
     let list:Arcane[]
@@ -330,11 +331,10 @@ export default function PriceTracker() {
 
   const sortedItems=useMemo(()=>{
     const items=[...filteredItems]
-    const getRatio=(item:typeof items[0])=>item.pd.price&&item.motes?item.pd.price/item.motes:null
+
     if(sort==='price-desc')items.sort((a,b)=>(b.pd.price??-1)-(a.pd.price??-1))
     else if(sort==='price-asc')items.sort((a,b)=>(a.pd.price??99999)-(b.pd.price??99999))
-    else if(sort==='ratio-asc')items.sort((a,b)=>(getRatio(a)??99999)-(getRatio(b)??99999))
-    else if(sort==='ratio-desc')items.sort((a,b)=>(getRatio(b)??-1)-(getRatio(a)??-1))
+
     else if(sort==='name')items.sort((a,b)=>a.name.localeCompare(b.name))
     else if(sort==='tier')items.sort((a,b)=>TIER_ORDER[a.tier]-TIER_ORDER[b.tier])
     if(!showFavOnly)items.sort((a,b)=>(favorites.has(b.slug)?1:0)-(favorites.has(a.slug)?1:0))
@@ -350,8 +350,8 @@ export default function PriceTracker() {
 
   const pad=(n:number)=>String(n).padStart(2,'0')
   const cardProps=(a:typeof sortedItems[0])=>({
-    a,pd:a.pd,status,motes,
-    isBestInTier:bestRatioSlugs.has(a.slug)&&a.pd.price!==null,
+    a,pd:a.pd,status,
+    isBestInTier:bestInTierSlugs.has(a.slug)&&a.pd.price!==null,
     isGlobalBest:globalBest===a.slug,
     onSelect:()=>setSelected(a),
     isFav:favorites.has(a.slug),
@@ -373,37 +373,6 @@ export default function PriceTracker() {
         </div>
       )}
 
-      {/* Calculator profit */}
-      <div style={{background:'#16161a',border:'1px solid #2a2a2e',borderRadius:12,padding:'14px 20px',marginBottom:16}}>
-        <div style={{fontSize:13,fontWeight:500,color:'#fff',marginBottom:10}}>🧮 Calculator profit (Event arcane)</div>
-        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:12,color:'#888'}}>{EVENT.currency}:</span>
-            <input type="number" min="0" value={motesInput} onChange={e=>setMotesInput(e.target.value)} placeholder="ex: 100"
-              style={{width:90,padding:'5px 10px',borderRadius:8,border:'1px solid #333',background:'#0d0d0f',color:'#fff',fontSize:13,outline:'none'}}/>
-          </div>
-          {motes>0&&status==='done'&&(
-            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-              {['Legendary','Rare','Uncommon','Common'].map(tier=>{
-                const arcane=ARCANES.filter(a=>a.tier===tier&&a.motes).find(a=>bestRatioSlugs.has(a.slug))
-                if(!arcane||!arcane.motes)return null
-                const price=prices[arcane.slug]?.price;if(!price)return null
-                const motesPerR5=arcane.motes*COPIES_FOR_R5,fullR5=Math.floor(motes/motesPerR5),rem=Math.floor((motes%motesPerR5)/arcane.motes)
-                return(
-                  <div key={tier} style={{background:'#0d0d0f',border:'1px solid #2a2a2e',borderRadius:8,padding:'6px 12px',fontSize:12}}>
-                    <span style={{color:'#888'}}>{tier}: </span>
-                    <span style={{color:'#fff',fontWeight:600}}>{fullR5*price} pt</span>
-                    <span style={{color:'#555'}}> ({fullR5}x R5 {arcane.name.replace('Arcane ','')})</span>
-                    {rem>0&&<span style={{color:'#444'}}> +{rem} copii</span>}
-                    {fullR5===0&&<span style={{color:'#555'}}> (trebuie {motesPerR5} motes/R5)</span>}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-          {motes===0&&<span style={{fontSize:12,color:'#555'}}>Introdu numărul de motes pentru profit estimat</span>}
-        </div>
-      </div>
 
       {/* Flip Calculator */}
       <details style={{marginBottom:16}}>
@@ -435,8 +404,7 @@ export default function PriceTracker() {
           <select value={sort} onChange={e=>setSort(e.target.value)} style={{fontSize:12,padding:'6px 10px',borderRadius:8,border:'1px solid #333',background:'#1a1a1c',color:'#fff',cursor:'pointer'}}>
             <option value="price-desc">Preț ↓</option>
             <option value="price-asc">Preț ↑</option>
-            <option value="ratio-desc">pt/mote ↓</option>
-            <option value="ratio-asc">pt/mote ↑</option>
+
             <option value="name">Nume A-Z</option>
             <option value="tier">Tier</option>
           </select>
