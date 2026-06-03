@@ -81,7 +81,7 @@ function ModCard({ mod, pd, loading, onAlert, hasAlert }: { mod: Mod; pd: PriceD
       <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.3, paddingRight: 44 }}>{mod.name}</div>
       <div style={{ position: 'absolute', top: 10, right: 8, display: 'flex', gap: 4 }}>
         <button onClick={e => { e.stopPropagation(); onAlert() }}
-          style={{ background: 'none', border: 'none', fontSize: 13, cursor: 'pointer', color: hasAlert ? '#5a8dee' : '#333', padding: 2, lineHeight: 1 }}>
+          style={{ background: hasAlert ? '#1a2a44' : 'none', border: hasAlert ? '1px solid #5a8dee' : '1px solid transparent', borderRadius: 4, fontSize: 12, cursor: 'pointer', padding: '1px 3px', lineHeight: 1 }}>
           🔔
         </button>
       </div>

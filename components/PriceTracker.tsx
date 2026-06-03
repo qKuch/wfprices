@@ -153,7 +153,7 @@ function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onTogg
         {isFav?'★':'☆'}
       </button>
       <button onClick={e=>{e.stopPropagation();onAlert()}}
-        style={{position:'absolute',top:8,right:6,background:'none',border:'none',fontSize:13,cursor:'pointer',color:hasAlert?'#5a8dee':'#333',padding:2,lineHeight:1}}>
+        style={{position:'absolute',top:8,right:6,background:hasAlert?'#1a2a44':'none',border:hasAlert?'1px solid #5a8dee':'1px solid transparent',borderRadius:4,fontSize:12,cursor:'pointer',padding:'1px 3px',lineHeight:1}}>
         🔔
       </button>
       <div style={{fontSize:13,fontWeight:500,color:'#fff',marginBottom:4,paddingRight:52}}>{a.name}</div>
