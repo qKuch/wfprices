@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { EVENT } from '../lib/event'
 
 interface Arcane {
   name: string; slug: string; tier: string; motes?: number; syndicate?: string; cost?: number
@@ -118,8 +119,8 @@ const ARCANES: Arcane[] = [
   { name: 'Melee Vortex',        slug: 'melee_vortex',        tier: 'Syndicate', syndicate: 'Cavia',          cost: 10000 },
 ]
 
-const EVENT_END = new Date('2026-06-01T23:59:59Z')
-const COPIES_FOR_R5 = 21
+const EVENT_END = EVENT.endDate
+const COPIES_FOR_R5 = EVENT.copiesForR5
 const TIER_ORDER: Record<string,number> = { Legendary:0,Rare:1,Uncommon:2,Common:3,Ascension:4,Special:5,Syndicate:6 }
 const TIER_STYLE: Record<string,{bg:string;color:string}> = {
   Legendary:{bg:'#3C3489',color:'#CECBF6'}, Rare:{bg:'#633806',color:'#FAC775'},
@@ -142,7 +143,7 @@ const GROUP_LABELS: Record<string,string> = {
   Ostron:'Ostron · Cetus','The Quills':'The Quills · Cetus','Solaris United':'Solaris United · Fortuna',
   'Vox Solaris':'Vox Solaris · Fortuna',Entrati:'Entrati · Necralisk',Holdfasts:'Holdfasts · Zariman',Cavia:'Cavia · Deimos',
 }
-const EVENT_FILTERS = ['Legendary','Rare','Uncommon','Common','Ascension','Special']
+const EVENT_FILTERS = EVENT.tiers
 const SYNDICATE_FILTERS = ['Ostron','The Quills','Solaris United','Vox Solaris','Entrati','Holdfasts','Cavia']
 
 function Sparkline({data,w=80,h=24}:{data:{v:number}[];w?:number;h?:number}) {
@@ -281,7 +282,7 @@ function ArcaneCard({a,pd,status,motes,isBestInTier,isGlobalBest,onSelect,isFav,
       </div>
       {pd.min!=null&&pd.max!=null&&pd.price!=null&&<div style={{fontSize:11,color:'#444',marginTop:2}}>{pd.min} – {pd.max} pt</div>}
       {pd.volume!=null&&<div style={{fontSize:11,marginTop:2,color:volColor}}>● {pd.volume} tranzacții/48h{pd.volume<3?' · greu de vândut':''}</div>}
-      {showMotes&&<div style={{fontSize:11,color:'#666',marginTop:6}}>{a.tier==='Ascension'?`${a.motes} Vestigial Motes`:`${a.motes} Volatile Mote${a.motes!>1?'s':''}`}</div>}
+      {showMotes&&<div style={{fontSize:11,color:'#666',marginTop:6}}>{a.motes} {EVENT.tierCurrency(a.tier)}</div>}
       {isSyndicate&&a.cost&&<div style={{fontSize:11,color:'#666',marginTop:6}}>{a.cost.toLocaleString()} standing</div>}
       {ratio&&showMotes&&<div style={{fontSize:11,color:isBestInTier?'#4caf50':'#555',marginTop:1,fontWeight:isBestInTier?600:400}}>~{ratio} pt/mote</div>}
       {showMotes&&motes>0&&pd.price!=null&&(
@@ -290,6 +291,12 @@ function ArcaneCard({a,pd,status,motes,isBestInTier,isGlobalBest,onSelect,isFav,
         </div>
       )}
       {pd.price!=null&&<div style={{fontSize:10,color:'#333',marginTop:6}}>click pentru grafic</div>}
+      <a href={`https://warframe.market/items/${a.slug}`} target="_blank" rel="noopener noreferrer"
+        onClick={e=>e.stopPropagation()}
+        style={{display:'inline-block',marginTop:8,fontSize:11,color:'#5a8dee',textDecoration:'none',opacity:0.7}}
+        onMouseEnter={e=>(e.currentTarget.style.opacity='1')}
+        onMouseLeave={e=>(e.currentTarget.style.opacity='0.7')}
+      >↗ warframe.market</a>
     </div>
   )
 }
@@ -318,6 +325,12 @@ function CompactRow({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onTogg
         <div style={{color:'#fff',fontWeight:500,display:'flex',alignItems:'center',gap:4}}>
           {isGlobalBest&&<span>⭐</span>}{isBestInTier&&!isGlobalBest&&<span>🏆</span>}
           {a.name}
+          <a href={`https://warframe.market/items/${a.slug}`} target="_blank" rel="noopener noreferrer"
+            onClick={e=>e.stopPropagation()}
+            style={{fontSize:10,color:'#5a8dee',textDecoration:'none',opacity:0.6,marginLeft:2}}
+            onMouseEnter={e=>(e.currentTarget.style.opacity='1')}
+            onMouseLeave={e=>(e.currentTarget.style.opacity='0.6')}
+          >↗</a>
         </div>
         <div style={{display:'flex',gap:4,alignItems:'center',marginTop:2}}>
           <span style={{fontSize:10,padding:'1px 6px',borderRadius:3,background:ts.bg,color:ts.color}}>{a.syndicate??a.tier}</span>
@@ -449,7 +462,7 @@ export default function PriceTracker() {
       {!countdown.expired && (
         <div style={{background:countdown.days<3?'#2a1a1a':'#16161a',border:`1px solid ${countdown.days<3?'#5a2a2a':'#2a2a2e'}`,borderRadius:12,padding:'14px 20px',marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
           <div>
-            <div style={{fontSize:11,color:'#888',marginBottom:4}}>⏱ Timp rămas — Operation: Belly of the Beast</div>
+            <div style={{fontSize:11,color:'#888',marginBottom:4}}>⏱ Timp rămas — {EVENT.name}</div>
             <div style={{fontSize:22,fontWeight:700,color:countdown.days<3?'#e55':'#fff',fontVariantNumeric:'tabular-nums'}}>{countdown.days}z {pad(countdown.hours)}h {pad(countdown.minutes)}m {pad(countdown.seconds)}s</div>
           </div>
           <div style={{fontSize:11,color:'#555'}}>Se termina pe 1 iunie 2026</div>
@@ -461,7 +474,7 @@ export default function PriceTracker() {
         <div style={{fontSize:13,fontWeight:500,color:'#fff',marginBottom:10}}>🧮 Calculator profit (Event arcane)</div>
         <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:12,color:'#888'}}>Volatile Motes:</span>
+            <span style={{fontSize:12,color:'#888'}}>{EVENT.currency}:</span>
             <input type="number" min="0" value={motesInput} onChange={e=>setMotesInput(e.target.value)} placeholder="ex: 100"
               style={{width:90,padding:'5px 10px',borderRadius:8,border:'1px solid #333',background:'#0d0d0f',color:'#fff',fontSize:13,outline:'none'}}/>
           </div>

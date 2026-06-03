@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { EVENT } from '../lib/event'
 
 const SLUG_NAMES: Record<string, string> = {
   arcane_energize: 'Arcane Energize', arcane_grace: 'Arcane Grace', arcane_barrier: 'Arcane Barrier',
@@ -119,8 +120,7 @@ export default function LandingPage() {
     fetch('/api/stats').then(r => r.json()).then(d => { setStats(d); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  const EVENT_END = new Date('2026-06-01T23:59:59Z')
-  const daysLeft = Math.max(0, Math.ceil((EVENT_END.getTime() - Date.now()) / 86400000))
+  const daysLeft = Math.max(0, Math.ceil((EVENT.endDate.getTime() - Date.now()) / 86400000))
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '3rem 1rem 4rem' }}>
@@ -149,7 +149,7 @@ export default function LandingPage() {
         <div style={{ background: 'linear-gradient(90deg, #1a2a44 0%, #16161a 100%)', border: '1px solid #2a3a54', borderRadius: 12, padding: '14px 20px', marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div>
             <span style={{ fontSize: 12, fontWeight: 600, color: '#5a8dee' }}>⚡ ACTIV</span>
-            <span style={{ fontSize: 13, color: '#ccc', marginLeft: 10 }}>Operation: Belly of the Beast</span>
+            <span style={{ fontSize: 13, color: '#ccc', marginLeft: 10 }}>{EVENT.name}</span>
           </div>
           <div style={{ fontSize: 13, color: '#888' }}>
             {daysLeft < 4 ? <span style={{ color: '#e55', fontWeight: 600 }}>⚠ {daysLeft} zile rămase!</span> : `${daysLeft} zile rămase`}
