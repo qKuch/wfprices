@@ -288,7 +288,7 @@ export default function PriceTracker() {
   const [showFavOnly,setShowFavOnly]=useState(false)
   const [rankMode,setRankMode]=useState<'max'|'min'>('max')
   const [alertTarget,setAlertTarget]=useState<Arcane|null>(null)
-  const [alertSlugs,setAlertSlugs]=useState<Set<string>>(()=>new Set(getAlerts().filter(a=>!a.dismissed).map(a=>a.slug)))
+  const [alertSlugs,setAlertSlugs]=useState<string[]>(()=>getAlerts().filter(a=>!a.dismissed).map(a=>a.slug))
   const countdown=useCountdown(EVENT_END)
 
   useEffect(()=>{
@@ -367,13 +367,13 @@ export default function PriceTracker() {
     isFav:favorites.has(a.slug),
     onToggleFav:()=>toggleFav(a.slug),
     onAlert:()=>setAlertTarget(a),
-    hasAlert:alertSlugs.has(a.slug),
+    hasAlert:alertSlugs.includes(a.slug),
   })
 
   return (
     <div style={{maxWidth:1200,margin:'0 auto',padding:'2rem 1rem'}}>
       {selected&&<ChartModal arcane={selected} pd={prices[selected.slug]??{price:null}} onClose={()=>setSelected(null)}/>}
-      {alertTarget&&<AlertModal slug={alertTarget.slug} name={alertTarget.name} type="arcane" currentPrice={prices[alertTarget.slug]?.price??null} onClose={()=>{setAlertTarget(null);setAlertSlugs(new Set(getAlerts().filter(a=>!a.dismissed).map(a=>a.slug)))}}/>}
+      {alertTarget&&<AlertModal slug={alertTarget.slug} name={alertTarget.name} type="arcane" currentPrice={prices[alertTarget.slug]?.price??null} onClose={()=>{setAlertTarget(null);setAlertSlugs(getAlerts().filter(a=>!a.dismissed).map(a=>a.slug))}}/>}
 
       {/* Countdown */}
       {!countdown.expired && (

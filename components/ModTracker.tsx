@@ -157,7 +157,7 @@ export default function ModTracker() {
   const [rankMode, setRankMode] = useState<'max'|'min'>('max')
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [alertTarget, setAlertTarget] = useState<Mod | null>(null)
-  const [alertSlugs, setAlertSlugs] = useState<Set<string>>(() => new Set(getAlerts().filter(a => !a.dismissed).map(a => a.slug)))
+  const [alertSlugs, setAlertSlugs] = useState<string[]>(() => getAlerts().filter(a => !a.dismissed).map(a => a.slug))
 
   const slugs = React.useMemo(() => Array.from(new Set(MODS.map(m => m.slug))), [])
 
@@ -325,13 +325,13 @@ export default function ModTracker() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 12 }}>
           {filtered.map(mod => (
-            <ModCard key={`${mod.slug}-${mod.category}`} mod={mod} pd={prices[mod.slug] ?? { price: null }} loading={loading} onAlert={() => setAlertTarget(mod)} hasAlert={alertSlugs.has(mod.slug)} />
+            <ModCard key={`${mod.slug}-${mod.category}`} mod={mod} pd={prices[mod.slug] ?? { price: null }} loading={loading} onAlert={() => setAlertTarget(mod)} hasAlert={alertSlugs.includes(mod.slug)} />
           ))}
         </div>
       )}
 
       {alertTarget && (
-        <AlertModal slug={alertTarget.slug} name={alertTarget.name} type="mod" currentPrice={prices[alertTarget.slug]?.price ?? null} onClose={() => { setAlertTarget(null); setAlertSlugs(new Set(getAlerts().filter(a => !a.dismissed).map(a => a.slug))) }} />
+        <AlertModal slug={alertTarget.slug} name={alertTarget.name} type="mod" currentPrice={prices[alertTarget.slug]?.price ?? null} onClose={() => { setAlertTarget(null); setAlertSlugs(getAlerts().filter(a => !a.dismissed).map(a => a.slug)) }} />
       )}
 
       <div style={{ marginTop: 24, fontSize: 11, color: '#444', textAlign: 'center' }}>
