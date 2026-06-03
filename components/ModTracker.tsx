@@ -28,6 +28,7 @@ const CAT_STYLE: Record<string, { bg: string; color: string }> = {
   Nightmare: { bg: '#1a0a1a', color: '#c060c0' },
   Aura:      { bg: '#0a1a0a', color: '#60c060' },
   Stance:    { bg: '#2a1a0a', color: '#e09040' },
+  Archon:    { bg: '#1a0a2a', color: '#c060ff' },
 }
 
 function Sparkline({ data }: { data: { t: string; v: number }[] }) {

@@ -17,6 +17,7 @@ export const MOD_CATEGORIES = [
   'Nightmare',
   'Aura',
   'Stance',
+  'Archon',
 ] as const
 
 export const MODS: Mod[] = [
@@ -128,4 +129,18 @@ export const MODS: Mod[] = [
   { name: 'Eleventh Storm',           slug: 'eleventh_storm',           category: 'Stance',    maxRank: 3,  rarity: 'Rare'      },
   { name: 'Crushing Ruin',            slug: 'crushing_ruin',            category: 'Stance',    maxRank: 3,  rarity: 'Rare'      },
   { name: 'Shimmering Blight',        slug: 'shimmering_blight',        category: 'Stance',    maxRank: 3,  rarity: 'Rare'      },
+
+  // ── Archon ────────────────────────────────────────────────
+  { name: 'Archon Continuity',        slug: 'archon_continuity',        category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Intensify',         slug: 'archon_intensify',         category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Stretch',           slug: 'archon_stretch',           category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Vitality',          slug: 'archon_vitality',          category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Flow',              slug: 'archon_flow',              category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Firestorm',         slug: 'archon_firestorm',         category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Steel Fiber',       slug: 'archon_steel_fiber',       category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Steadfast',         slug: 'archon_steadfast',         category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Reach',             slug: 'archon_reach',             category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Aviator',           slug: 'archon_aviator',           category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Aggression',        slug: 'archon_aggression',        category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Strut',             slug: 'archon_strut',             category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
 ]
