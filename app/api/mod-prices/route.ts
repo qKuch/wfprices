@@ -49,7 +49,7 @@ async function fetchModPrice(slug: string, maxRank: number) {
 
 export async function GET() {
   const results: Record<string, any> = {}
-  const slugs = [...new Set(MODS.map(m => m.slug))]
+  const slugs = Array.from(new Set(MODS.map(m => m.slug)))
   const maxRankMap = Object.fromEntries(MODS.map(m => [m.slug, m.maxRank]))
 
   for (let i = 0; i < slugs.length; i += 4) {
