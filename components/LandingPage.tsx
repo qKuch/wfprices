@@ -3,15 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { EVENT } from '../lib/event'
 
-const SLUG_NAMES: Record<string, string> = {
-  arcane_energize: 'Arcane Energize', arcane_grace: 'Arcane Grace', arcane_barrier: 'Arcane Barrier',
-  arcane_avenger: 'Arcane Avenger', arcane_fury: 'Arcane Fury', arcane_guardian: 'Arcane Guardian',
-  arcane_velocity: 'Arcane Velocity', arcane_acceleration: 'Arcane Acceleration',
-  molt_augmented: 'Molt Augmented', arcane_aegis: 'Arcane Aegis',
-  cascadia_empower: 'Cascadia Empower', melee_influence: 'Melee Influence',
-}
-
-interface StatItem { slug: string; price: number; change24h: number | null; volume: number }
+interface StatItem { slug: string; name: string; price: number; change24h: number | null; volume: number }
 interface Stats {
   mostExpensive: StatItem[]; topGainers: StatItem[]; topLosers: StatItem[]
   avgPrice: number; tracked: number
@@ -95,7 +87,7 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 
 // ── Price row ─────────────────────────────────────────────────────────────
 function PriceRow({ item, showChange }: { item: StatItem; showChange?: boolean }) {
-  const name = SLUG_NAMES[item.slug] ?? item.slug
+  const name = item.name
   const c = item.change24h
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1a1a1e' }}>

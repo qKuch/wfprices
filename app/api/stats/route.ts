@@ -1,12 +1,6 @@
 export const runtime = 'edge'
 import { NextResponse } from 'next/server'
-
-const TOP_SLUGS = [
-  'arcane_energize','arcane_grace','arcane_barrier',
-  'arcane_avenger','arcane_fury','arcane_guardian',
-  'arcane_velocity','arcane_acceleration','molt_augmented',
-  'arcane_aegis','cascadia_empower','melee_influence',
-]
+import { ARCANES } from '../../../lib/arcanes'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -48,18 +42,25 @@ async function fetchStats(slug: string) {
 }
 
 export async function GET() {
+  const slugs = ARCANES.map(a => a.slug)
+  const nameMap = Object.fromEntries(ARCANES.map(a => [a.slug, a.name]))
+
   const results = []
-  for (let i = 0; i < TOP_SLUGS.length; i += 3) {
-    const batch = TOP_SLUGS.slice(i, i + 3)
+  for (let i = 0; i < slugs.length; i += 4) {
+    const batch = slugs.slice(i, i + 4)
     const res = await Promise.all(batch.map(fetchStats))
     results.push(...res.filter(Boolean))
-    if (i + 3 < TOP_SLUGS.length) await sleep(300)
+    if (i + 4 < slugs.length) await sleep(250)
   }
 
   const valid = results.filter((r): r is NonNullable<typeof r> => r !== null && r.price !== null)
+    .map(r => ({ ...r, name: nameMap[r.slug] ?? r.slug }))
+
   const mostExpensive = [...valid].sort((a, b) => b.price - a.price).slice(0, 5)
-  const topGainers = [...valid].filter(r => r.change24h !== null).sort((a, b) => (b.change24h ?? 0) - (a.change24h ?? 0)).slice(0, 5)
-  const topLosers = [...valid].filter(r => r.change24h !== null).sort((a, b) => (a.change24h ?? 0) - (b.change24h ?? 0)).slice(0, 3)
+  const topGainers = [...valid].filter(r => r.change24h !== null && (r.change24h ?? 0) > 0)
+    .sort((a, b) => (b.change24h ?? 0) - (a.change24h ?? 0)).slice(0, 5)
+  const topLosers = [...valid].filter(r => r.change24h !== null)
+    .sort((a, b) => (a.change24h ?? 0) - (b.change24h ?? 0)).slice(0, 3)
   const avgPrice = valid.length ? Math.round(valid.reduce((s, r) => s + r.price, 0) / valid.length) : 0
 
   return NextResponse.json({ mostExpensive, topGainers, topLosers, avgPrice, tracked: valid.length })
