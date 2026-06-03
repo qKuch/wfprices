@@ -59,7 +59,7 @@ function SkeletonCard() {
   )
 }
 
-function ModCard({ mod, pd, loading, onAlert }: { mod: Mod; pd: PriceData; loading: boolean; onAlert: () => void }) {
+function ModCard({ mod, pd, loading, onAlert, hasAlert }: { mod: Mod; pd: PriceData; loading: boolean; onAlert: () => void; hasAlert: boolean }) {
   const [qty, setQty] = useState('')
   const qtyN = parseInt(qty) || 0
   const profit = pd.price && qtyN > 0 ? Math.round(qtyN * pd.price * 0.9) : null
@@ -81,7 +81,7 @@ function ModCard({ mod, pd, loading, onAlert }: { mod: Mod; pd: PriceData; loadi
       <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.3, paddingRight: 44 }}>{mod.name}</div>
       <div style={{ position: 'absolute', top: 10, right: 8, display: 'flex', gap: 4 }}>
         <button onClick={e => { e.stopPropagation(); onAlert() }}
-          style={{ background: 'none', border: 'none', fontSize: 13, cursor: 'pointer', color: getAlerts().some(al => al.slug === mod.slug && !al.dismissed) ? '#5a8dee' : '#333', padding: 2, lineHeight: 1 }}>
+          style={{ background: 'none', border: 'none', fontSize: 13, cursor: 'pointer', color: hasAlert ? '#5a8dee' : '#333', padding: 2, lineHeight: 1 }}>
           🔔
         </button>
       </div>
@@ -157,6 +157,7 @@ export default function ModTracker() {
   const [rankMode, setRankMode] = useState<'max'|'min'>('max')
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [alertTarget, setAlertTarget] = useState<Mod | null>(null)
+  const [alertSlugs, setAlertSlugs] = useState<Set<string>>(() => new Set(getAlerts().filter(a => !a.dismissed).map(a => a.slug)))
 
   const slugs = React.useMemo(() => Array.from(new Set(MODS.map(m => m.slug))), [])
 
@@ -324,13 +325,13 @@ export default function ModTracker() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 12 }}>
           {filtered.map(mod => (
-            <ModCard key={`${mod.slug}-${mod.category}`} mod={mod} pd={prices[mod.slug] ?? { price: null }} loading={loading} onAlert={() => setAlertTarget(mod)} />
+            <ModCard key={`${mod.slug}-${mod.category}`} mod={mod} pd={prices[mod.slug] ?? { price: null }} loading={loading} onAlert={() => setAlertTarget(mod)} hasAlert={alertSlugs.has(mod.slug)} />
           ))}
         </div>
       )}
 
       {alertTarget && (
-        <AlertModal slug={alertTarget.slug} name={alertTarget.name} type="mod" currentPrice={prices[alertTarget.slug]?.price ?? null} onClose={() => setAlertTarget(null)} />
+        <AlertModal slug={alertTarget.slug} name={alertTarget.name} type="mod" currentPrice={prices[alertTarget.slug]?.price ?? null} onClose={() => { setAlertTarget(null); setAlertSlugs(new Set(getAlerts().filter(a => !a.dismissed).map(a => a.slug))) }} />
       )}
 
       <div style={{ marginTop: 24, fontSize: 11, color: '#444', textAlign: 'center' }}>

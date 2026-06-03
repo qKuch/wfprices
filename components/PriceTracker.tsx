@@ -126,9 +126,9 @@ function FlipCalcInline() {
   )
 }
 
-function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onToggleFav,onAlert}:{
+function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onToggleFav,onAlert,hasAlert}:{
   a:Arcane;pd:PriceData;status:string;
-  isBestInTier:boolean;isGlobalBest:boolean;onSelect:()=>void;isFav:boolean;onToggleFav:()=>void;onAlert:()=>void
+  isBestInTier:boolean;isGlobalBest:boolean;onSelect:()=>void;isFav:boolean;onToggleFav:()=>void;onAlert:()=>void;hasAlert:boolean
 }) {
   const isSyndicate=a.tier==='Syndicate',isSpecial=a.tier==='Special'
   const ts=isSyndicate&&a.syndicate?SYNDICATE_STYLE[a.syndicate]:TIER_STYLE[a.tier]
@@ -153,7 +153,7 @@ function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onTogg
         {isFav?'★':'☆'}
       </button>
       <button onClick={e=>{e.stopPropagation();onAlert()}}
-        style={{position:'absolute',top:8,right:6,background:'none',border:'none',fontSize:13,cursor:'pointer',color:getAlerts().some(al=>al.slug===a.slug&&!al.dismissed)?'#5a8dee':'#333',padding:2,lineHeight:1}}>
+        style={{position:'absolute',top:8,right:6,background:'none',border:'none',fontSize:13,cursor:'pointer',color:hasAlert?'#5a8dee':'#333',padding:2,lineHeight:1}}>
         🔔
       </button>
       <div style={{fontSize:13,fontWeight:500,color:'#fff',marginBottom:4,paddingRight:52}}>{a.name}</div>
@@ -288,6 +288,7 @@ export default function PriceTracker() {
   const [showFavOnly,setShowFavOnly]=useState(false)
   const [rankMode,setRankMode]=useState<'max'|'min'>('max')
   const [alertTarget,setAlertTarget]=useState<Arcane|null>(null)
+  const [alertSlugs,setAlertSlugs]=useState<Set<string>>(()=>new Set(getAlerts().filter(a=>!a.dismissed).map(a=>a.slug)))
   const countdown=useCountdown(EVENT_END)
 
   useEffect(()=>{
@@ -366,12 +367,13 @@ export default function PriceTracker() {
     isFav:favorites.has(a.slug),
     onToggleFav:()=>toggleFav(a.slug),
     onAlert:()=>setAlertTarget(a),
+    hasAlert:alertSlugs.has(a.slug),
   })
 
   return (
     <div style={{maxWidth:1200,margin:'0 auto',padding:'2rem 1rem'}}>
       {selected&&<ChartModal arcane={selected} pd={prices[selected.slug]??{price:null}} onClose={()=>setSelected(null)}/>}
-      {alertTarget&&<AlertModal slug={alertTarget.slug} name={alertTarget.name} type="arcane" currentPrice={prices[alertTarget.slug]?.price??null} onClose={()=>setAlertTarget(null)}/>}
+      {alertTarget&&<AlertModal slug={alertTarget.slug} name={alertTarget.name} type="arcane" currentPrice={prices[alertTarget.slug]?.price??null} onClose={()=>{setAlertTarget(null);setAlertSlugs(new Set(getAlerts().filter(a=>!a.dismissed).map(a=>a.slug)))}}/>}
 
       {/* Countdown */}
       {!countdown.expired && (
