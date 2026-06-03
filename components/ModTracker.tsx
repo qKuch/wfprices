@@ -124,7 +124,7 @@ function ModCard({ mod, pd, loading, onAlert, hasAlert }: { mod: Mod; pd: PriceD
         <div style={{ borderTop: '1px solid #222', paddingTop: 8, marginTop: 2 }} onClick={e => e.stopPropagation()}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 11, color: '#555' }}>Qty:</span>
-            <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} placeholder="0"
+            <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} onKeyDown={e=>e.key==="Escape"&&e.stopPropagation()} placeholder="0"
               style={{ width: 52, padding: '3px 7px', borderRadius: 6, border: '1px solid #2a2a2e', background: '#0d0d0f', color: '#fff', fontSize: 12, outline: 'none' }} />
             {profit != null && profit > 0 && (
               <span style={{ fontSize: 12, color: '#4caf50', fontWeight: 600 }}>

@@ -37,15 +37,15 @@ function FlipCalc() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div>
           <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>Preț cumpărare (pt)</div>
-          <input type="number" min="0" value={buy} onChange={e => setBuy(e.target.value)} placeholder="0" style={inputStyle} />
+          <input type="number" min="0" value={buy} onChange={e => setBuy(e.target.value)} onKeyDown={e=>e.key==="Escape"&&e.stopPropagation()} placeholder="0" style={inputStyle} />
         </div>
         <div>
           <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>Preț vânzare (pt)</div>
-          <input type="number" min="0" value={sell} onChange={e => setSell(e.target.value)} placeholder="0" style={inputStyle} />
+          <input type="number" min="0" value={sell} onChange={e => setSell(e.target.value)} onKeyDown={e=>e.key==="Escape"&&e.stopPropagation()} placeholder="0" style={inputStyle} />
         </div>
         <div>
           <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>Cantitate</div>
-          <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} placeholder="1" style={inputStyle} />
+          <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} onKeyDown={e=>e.key==="Escape"&&e.stopPropagation()} placeholder="1" style={inputStyle} />
         </div>
       </div>
 

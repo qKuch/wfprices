@@ -16,6 +16,12 @@ export default function AlertModal({ slug, name, type, currentPrice, onClose }: 
   const [existing, setExisting] = useState<PriceAlert | null>(null)
 
   useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  useEffect(() => {
     const found = getAlerts().find(a => a.slug === slug && !a.dismissed)
     if (found) {
       setExisting(found)
@@ -99,6 +105,7 @@ export default function AlertModal({ slug, name, type, currentPrice, onClose }: 
           <input
             type="number" min="1" value={threshold}
             onChange={e => setThreshold(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); onClose() } }}
             placeholder="ex: 45"
             autoFocus
             style={{

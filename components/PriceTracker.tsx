@@ -45,6 +45,11 @@ function Sparkline({data,w=80,h=24}:{data:{v:number}[];w?:number;h?:number}) {
 }
 
 function ChartModal({arcane,pd,onClose}:{arcane:Arcane;pd:PriceData;onClose:()=>void}) {
+  React.useEffect(()=>{
+    const handler=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose()}
+    document.addEventListener('keydown',handler)
+    return ()=>document.removeEventListener('keydown',handler)
+  },[onClose])
   const history=pd.history??[],W=520,H=180,PAD=40
   const vals=history.map(d=>d.v).filter(v=>v>0)
   const mnV=vals.length?Math.min(...vals):0,mxV=vals.length?Math.max(...vals):1,rng=mxV-mnV||1
@@ -102,7 +107,7 @@ function FlipCalcInline() {
         {([['Cumpărare (pt)',buy,setBuy],['Vânzare (pt)',sell,setSell],['Cantitate',qty,setQty]] as [string,string,(v:string)=>void][]).map(([label,val,setter])=>(
           <div key={label}>
             <div style={{fontSize:11,color:'#666',marginBottom:5}}>{label}</div>
-            <input type="number" min="0" value={val} onChange={e=>setter(e.target.value)} style={inp}/>
+            <input type="number" min="0" value={val} onChange={e=>setter(e.target.value)} onKeyDown={e=>e.key==='Escape'&&e.stopPropagation()} style={inp}/>
           </div>
         ))}
       </div>
@@ -181,7 +186,7 @@ function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onTogg
         <div style={{marginTop:10,borderTop:'1px solid #222',paddingTop:8}} onClick={e=>e.stopPropagation()}>
           <div style={{display:'flex',alignItems:'center',gap:6}}>
             <span style={{fontSize:11,color:'#555'}}>Qty:</span>
-            <input type="number" min="1" value={qty} onChange={e=>setQty(e.target.value)} placeholder="0"
+            <input type="number" min="1" value={qty} onChange={e=>setQty(e.target.value)} onKeyDown={e=>e.key==='Escape'&&e.stopPropagation()} placeholder="0"
               style={{width:52,padding:'3px 7px',borderRadius:6,border:'1px solid #2a2a2e',background:'#0d0d0f',color:'#fff',fontSize:12,outline:'none'}}/>
             {profit!=null&&profit>0&&(
               <span style={{fontSize:12,color:'#4caf50',fontWeight:600}}>→ {profit} pt <span style={{fontSize:10,color:'#555',fontWeight:400}}>(−10% taxă)</span></span>
