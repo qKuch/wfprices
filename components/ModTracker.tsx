@@ -142,12 +142,15 @@ export default function ModTracker() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '')
   const [category, setCategory] = useState<string>('all')
+  const [rarity, setRarity] = useState<string>('all')
   const [sort, setSort] = useState<string>('price-desc')
+  const [rankMode, setRankMode] = useState<'max'|'min'>('max')
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
 
   useEffect(() => {
     setLoading(true)
-    fetch('/api/mod-prices')
+    setPrices({})
+    fetch(`/api/mod-prices?rank=${rankMode}`)
       .then(r => r.json())
       .then(data => {
         const mapped: Record<string, PriceData> = {}
@@ -159,7 +162,7 @@ export default function ModTracker() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [rankMode])
 
   const filtered = useMemo(() => {
     let list = [...MODS]
@@ -172,6 +175,7 @@ export default function ModTracker() {
       return true
     })
     if (category !== 'all') list = list.filter(m => m.category === category)
+    if (rarity !== 'all') list = list.filter(m => m.rarity === rarity)
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(m => m.name.toLowerCase().includes(q) || m.category.toLowerCase().includes(q))
@@ -187,7 +191,7 @@ export default function ModTracker() {
       return 0
     })
     return list
-  }, [prices, category, search, sort])
+  }, [prices, category, rarity, search, sort])
 
   const validCount = Object.values(prices).filter(p => p.price != null).length
 
@@ -225,10 +229,15 @@ export default function ModTracker() {
           <option value="name">Nume</option>
           <option value="category">Categorie</option>
         </select>
+        <button onClick={() => setRankMode(r => r === 'max' ? 'min' : 'max')}
+          style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid #333', background: '#1a1a1c', color: '#ccc', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: '#555' }}>Rank</span>
+          <span style={{ fontWeight: 700, color: rankMode === 'max' ? '#f0a050' : '#80c0f0' }}>{rankMode === 'max' ? 'Max' : '1'}</span>
+        </button>
       </div>
 
       {/* Category filters */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 12 }}>
         <div style={{ fontSize: 10, color: '#444', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Categorie</div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button onClick={() => setCategory('all')}
@@ -242,6 +251,27 @@ export default function ModTracker() {
               <button key={cat} onClick={() => setCategory(cat)}
                 style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, border: active ? `1px solid ${cs.color}` : '1px solid #333', background: active ? cs.bg : 'transparent', color: active ? cs.color : '#888', cursor: 'pointer' }}>
                 {cat}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Rarity filters */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 10, color: '#444', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Raritate</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button onClick={() => setRarity('all')}
+            style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, border: rarity === 'all' ? '1px solid #aaa' : '1px solid #333', background: rarity === 'all' ? '#2a2a2a' : 'transparent', color: rarity === 'all' ? '#ccc' : '#888', cursor: 'pointer' }}>
+            Toate
+          </button>
+          {(['Legendary', 'Rare', 'Uncommon', 'Common'] as const).map(r => {
+            const rs = RARITY_STYLE[r]
+            const active = rarity === r
+            return (
+              <button key={r} onClick={() => setRarity(r)}
+                style={{ fontSize: 12, padding: '4px 12px', borderRadius: 20, border: active ? `1px solid ${rs.color}` : '1px solid #333', background: active ? rs.bg : 'transparent', color: active ? rs.color : '#888', cursor: 'pointer' }}>
+                {r}
               </button>
             )
           })}

@@ -1,10 +1,10 @@
 export const runtime = 'edge'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { MODS } from '../../../lib/mods'
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
-async function fetchModPrice(slug: string, maxRank: number) {
+async function fetchModPrice(slug: string, maxRank: number, rankMode: 'max' | 'min') {
   try {
     const res = await fetch(`https://api.warframe.market/v1/items/${slug}/statistics`, {
       headers: {
@@ -17,9 +17,9 @@ async function fetchModPrice(slug: string, maxRank: number) {
     const live: any[] = data?.payload?.statistics_live?.['48hours'] ?? []
     if (!live.length) return null
 
-    // filter by max rank
-    const atMax = live.filter((e: any) => (e.mod_rank ?? 0) === maxRank)
-    const entries = atMax.length ? atMax : live
+    const targetRank = rankMode === 'max' ? maxRank : 0
+    const atRank = live.filter((e: any) => (e.mod_rank ?? 0) === targetRank)
+    const entries = atRank.length ? atRank : live
     entries.sort((a: any, b: any) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime())
 
     const recent = entries.slice(-4)
@@ -47,14 +47,15 @@ async function fetchModPrice(slug: string, maxRank: number) {
   } catch { return null }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const rankMode = (req.nextUrl.searchParams.get('rank') === 'min' ? 'min' : 'max') as 'max' | 'min'
   const results: Record<string, any> = {}
   const slugs = Array.from(new Set(MODS.map(m => m.slug)))
   const maxRankMap = Object.fromEntries(MODS.map(m => [m.slug, m.maxRank]))
 
   for (let i = 0; i < slugs.length; i += 4) {
     const batch = slugs.slice(i, i + 4)
-    const res = await Promise.all(batch.map(slug => fetchModPrice(slug, maxRankMap[slug] ?? 0)))
+    const res = await Promise.all(batch.map(slug => fetchModPrice(slug, maxRankMap[slug] ?? 0, rankMode)))
     res.forEach((r, j) => { if (r) results[batch[j]] = r })
     if (i + 4 < slugs.length) await sleep(300)
   }

@@ -250,9 +250,9 @@ function SkeletonCard() {
   )
 }
 
-async function fetchBatch(slugs:string[]):Promise<Record<string,PriceData>> {
+async function fetchBatch(slugs:string[], rankMode:'max'|'min'='max'):Promise<Record<string,PriceData>> {
   try {
-    const res=await fetch('/api/prices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slugs})})
+    const res=await fetch('/api/prices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slugs, rankMode})})
     if (!res.ok) return {}
     return (await res.json()).prices??{}
   } catch { return {} }
@@ -280,6 +280,7 @@ export default function PriceTracker() {
   const [compact,setCompact]=useState(false)
   const [favorites,setFavorites]=useState<Set<string>>(new Set())
   const [showFavOnly,setShowFavOnly]=useState(false)
+  const [rankMode,setRankMode]=useState<'max'|'min'>('max')
   const countdown=useCountdown(EVENT_END)
 
   useEffect(()=>{
@@ -300,12 +301,12 @@ export default function PriceTracker() {
     const slugs=ARCANES.map(a=>a.slug),result:Record<string,PriceData>={}
     for(let i=0;i<slugs.length;i+=CONCURRENCY){
       const batch=slugs.slice(i,i+CONCURRENCY)
-      Object.assign(result,await fetchBatch(batch))
+      Object.assign(result,await fetchBatch(batch, rankMode))
       setDone(i+batch.length);setPrices({...result})
       if(i+CONCURRENCY<slugs.length)await new Promise(r=>setTimeout(r,100))
     }
     setUpdatedAt(new Date());setStatus('done')
-  },[])
+  },[rankMode])
   useEffect(()=>{loadPrices()},[loadPrices])
 
   const foundCount=Object.values(prices).filter(v=>v.price!==null).length
@@ -415,6 +416,11 @@ export default function PriceTracker() {
           <button onClick={()=>setCompact(c=>!c)}
             style={{fontSize:12,padding:'6px 12px',borderRadius:8,border:`1px solid ${compact?'#5a8dee':'#333'}`,background:compact?'#1a2a44':'transparent',color:compact?'#5a8dee':'#888',cursor:'pointer'}}>
             {compact?'⊟ Compact':'⊞ Card'}
+          </button>
+          <button onClick={()=>setRankMode(r=>r==='max'?'min':'max')}
+            style={{fontSize:12,padding:'6px 12px',borderRadius:8,border:'1px solid #333',background:'#1a1a1c',color:'#ccc',cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+            <span style={{fontSize:10,color:'#555'}}>Rank</span>
+            <span style={{fontWeight:600,color:rankMode==='max'?'#f0a050':'#80c0f0'}}>{rankMode==='max'?'Max':'1'}</span>
           </button>
           <button onClick={loadPrices} disabled={status==='loading'}
             style={{fontSize:12,padding:'6px 16px',borderRadius:8,border:'1px solid #333',background:'#1a1a1c',color:status==='loading'?'#555':'#fff',cursor:status==='loading'?'not-allowed':'pointer'}}>
