@@ -2,8 +2,6 @@ export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
 import { MODS } from '../../../lib/mods'
 
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
-
 async function fetchModPrice(slug: string, maxRank: number, rankMode: 'max' | 'min') {
   try {
     const res = await fetch(`https://api.warframe.market/v1/items/${slug}/statistics`, {
@@ -47,18 +45,20 @@ async function fetchModPrice(slug: string, maxRank: number, rankMode: 'max' | 'm
   } catch { return null }
 }
 
-export async function GET(req: NextRequest) {
-  const rankMode = (req.nextUrl.searchParams.get('rank') === 'min' ? 'min' : 'max') as 'max' | 'min'
-  const results: Record<string, any> = {}
-  const slugs = Array.from(new Set(MODS.map(m => m.slug)))
+// POST: accepts { slugs, rankMode } — same pattern as /api/prices
+export async function POST(req: NextRequest) {
+  const { slugs, rankMode = 'max' } = await req.json()
+  if (!slugs || !Array.isArray(slugs)) return NextResponse.json({ error: 'Invalid slugs' }, { status: 400 })
+
   const maxRankMap = Object.fromEntries(MODS.map(m => [m.slug, m.maxRank]))
+  const results: Record<string, any> = {}
 
-  for (let i = 0; i < slugs.length; i += 4) {
-    const batch = slugs.slice(i, i + 4)
-    const res = await Promise.all(batch.map(slug => fetchModPrice(slug, maxRankMap[slug] ?? 0, rankMode)))
-    res.forEach((r, j) => { if (r) results[batch[j]] = r })
-    if (i + 4 < slugs.length) await sleep(300)
-  }
+  await Promise.all(
+    slugs.map(async (slug: string) => {
+      const r = await fetchModPrice(slug, maxRankMap[slug] ?? 0, rankMode as 'max' | 'min')
+      if (r) results[slug] = r
+    })
+  )
 
-  return NextResponse.json(results)
+  return NextResponse.json({ prices: results })
 }

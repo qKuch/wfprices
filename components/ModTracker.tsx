@@ -141,6 +141,7 @@ export default function ModTracker() {
   const searchParams = useSearchParams()
   const [prices, setPrices] = useState<Record<string, PriceData>>({})
   const [loading, setLoading] = useState(true)
+  const [done, setDone] = useState(0)
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '')
   const [category, setCategory] = useState<string>('all')
   const [rarity, setRarity] = useState<string>('all')
@@ -148,22 +149,38 @@ export default function ModTracker() {
   const [rankMode, setRankMode] = useState<'max'|'min'>('max')
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
 
-  useEffect(() => {
+  const slugs = React.useMemo(() => Array.from(new Set(MODS.map(m => m.slug))), [])
+
+  const loadPrices = React.useCallback(async (mode: 'max'|'min') => {
     setLoading(true)
+    setDone(0)
     setPrices({})
-    fetch(`/api/mod-prices?rank=${rankMode}`)
-      .then(r => r.json())
-      .then(data => {
-        const mapped: Record<string, PriceData> = {}
-        Object.entries(data).forEach(([slug, d]: [string, any]) => {
-          mapped[slug] = { price: d.price ?? null, change24h: d.change24h ?? null, volume: d.volume, history: d.history }
+    const result: Record<string, PriceData> = {}
+    const BATCH = 3
+    for (let i = 0; i < slugs.length; i += BATCH) {
+      const batch = slugs.slice(i, i + BATCH)
+      try {
+        const res = await fetch('/api/mod-prices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slugs: batch, rankMode: mode }),
         })
-        setPrices(mapped)
-        setUpdatedAt(new Date())
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [rankMode])
+        if (res.ok) {
+          const data = await res.json()
+          Object.entries(data.prices ?? {}).forEach(([slug, d]: [string, any]) => {
+            result[slug] = { price: d.price ?? null, change24h: d.change24h ?? null, volume: d.volume, history: d.history }
+          })
+        }
+      } catch {}
+      setDone(i + batch.length)
+      setPrices({ ...result })
+      if (i + BATCH < slugs.length) await new Promise(r => setTimeout(r, 100))
+    }
+    setUpdatedAt(new Date())
+    setLoading(false)
+  }, [slugs])
+
+  React.useEffect(() => { loadPrices(rankMode) }, [rankMode, loadPrices])
 
   const filtered = useMemo(() => {
     let list = [...MODS]
@@ -203,9 +220,9 @@ export default function ModTracker() {
         <h1 style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '0 0 6px' }}>Mod Tracker</h1>
         <div style={{ fontSize: 13, color: '#555' }}>
           {loading
-            ? 'Se încarcă prețurile...'
+            ? `Se încarcă... ${Math.round((done / slugs.length) * 100)}% (${done}/${slugs.length})`
             : updatedAt
-              ? `Actualizat: ${updatedAt.toLocaleTimeString('ro-RO')} · ${validCount}/${MODS.length} prețuri`
+              ? `Actualizat: ${updatedAt.toLocaleTimeString('ro-RO')} · ${validCount}/${slugs.length} prețuri`
               : ''}
         </div>
       </div>
@@ -213,8 +230,7 @@ export default function ModTracker() {
       {/* Progress bar */}
       {loading && (
         <div style={{ height: 3, background: '#222', borderRadius: 2, marginBottom: 16, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: '60%', background: '#5a8dee', borderRadius: 2, animation: 'indeterminate 1.5s ease-in-out infinite' }} />
-          <style>{`@keyframes indeterminate{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}`}</style>
+          <div style={{ height: '100%', width: `${Math.round((done / slugs.length) * 100)}%`, background: '#5a8dee', borderRadius: 2, transition: 'width 0.3s ease' }} />
         </div>
       )}
 
@@ -234,6 +250,10 @@ export default function ModTracker() {
           style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid #333', background: '#1a1a1c', color: '#ccc', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 11, color: '#555' }}>Rank</span>
           <span style={{ fontWeight: 700, color: rankMode === 'max' ? '#f0a050' : '#80c0f0' }}>{rankMode === 'max' ? 'Max' : '1'}</span>
+        </button>
+        <button onClick={() => loadPrices(rankMode)} disabled={loading}
+          style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid #333', background: '#1a1a1c', color: loading ? '#555' : '#fff', fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer' }}>
+          {loading ? '...' : '↻ Refresh'}
         </button>
       </div>
 
