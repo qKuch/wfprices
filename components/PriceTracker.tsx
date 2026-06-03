@@ -3,6 +3,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { EVENT } from '../lib/event'
 import { ARCANES, type Arcane } from '../lib/arcanes'
+import { checkAlerts, getAlerts } from '../lib/alerts'
+import AlertModal from './AlertModal'
 
 interface PriceData {
   price: number | null; min?: number | null; max?: number | null
@@ -124,9 +126,9 @@ function FlipCalcInline() {
   )
 }
 
-function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onToggleFav}:{
+function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onToggleFav,onAlert}:{
   a:Arcane;pd:PriceData;status:string;
-  isBestInTier:boolean;isGlobalBest:boolean;onSelect:()=>void;isFav:boolean;onToggleFav:()=>void
+  isBestInTier:boolean;isGlobalBest:boolean;onSelect:()=>void;isFav:boolean;onToggleFav:()=>void;onAlert:()=>void
 }) {
   const isSyndicate=a.tier==='Syndicate',isSpecial=a.tier==='Special'
   const ts=isSyndicate&&a.syndicate?SYNDICATE_STYLE[a.syndicate]:TIER_STYLE[a.tier]
@@ -144,13 +146,17 @@ function ArcaneCard({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onTogg
       onMouseLeave={e=>((e.currentTarget as HTMLDivElement).style.borderColor=borderColor)}
       style={{background:'#16161a',border:`1px solid ${borderColor}`,borderRadius:12,padding:'14px 16px',cursor:pd.price!==null?'pointer':'default',position:'relative',transition:'border-color 0.15s'}}
     >
-      {isGlobalBest&&<div style={{position:'absolute',top:10,right:30,fontSize:16}}>⭐</div>}
-      {isBestInTier&&!isGlobalBest&&<div style={{position:'absolute',top:10,right:30,fontSize:14}}>🏆</div>}
+      {isGlobalBest&&<div style={{position:'absolute',top:10,right:54,fontSize:16}}>⭐</div>}
+      {isBestInTier&&!isGlobalBest&&<div style={{position:'absolute',top:10,right:54,fontSize:14}}>🏆</div>}
       <button onClick={e=>{e.stopPropagation();onToggleFav()}}
-        style={{position:'absolute',top:8,right:8,background:'none',border:'none',fontSize:16,cursor:'pointer',color:isFav?'#f5c518':'#333',padding:2,lineHeight:1}}>
+        style={{position:'absolute',top:8,right:30,background:'none',border:'none',fontSize:16,cursor:'pointer',color:isFav?'#f5c518':'#333',padding:2,lineHeight:1}}>
         {isFav?'★':'☆'}
       </button>
-      <div style={{fontSize:13,fontWeight:500,color:'#fff',marginBottom:4,paddingRight:28}}>{a.name}</div>
+      <button onClick={e=>{e.stopPropagation();onAlert()}}
+        style={{position:'absolute',top:8,right:6,background:'none',border:'none',fontSize:13,cursor:'pointer',color:getAlerts().some(al=>al.slug===a.slug&&!al.dismissed)?'#5a8dee':'#333',padding:2,lineHeight:1}}>
+        🔔
+      </button>
+      <div style={{fontSize:13,fontWeight:500,color:'#fff',marginBottom:4,paddingRight:52}}>{a.name}</div>
       <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:8}}>
         {isSyndicate&&a.syndicate?(
           <><span style={{fontSize:10,padding:'2px 7px',borderRadius:4,background:ts.bg,color:ts.color}}>{a.syndicate}</span>
@@ -281,6 +287,7 @@ export default function PriceTracker() {
   const [favorites,setFavorites]=useState<Set<string>>(new Set())
   const [showFavOnly,setShowFavOnly]=useState(false)
   const [rankMode,setRankMode]=useState<'max'|'min'>('max')
+  const [alertTarget,setAlertTarget]=useState<Arcane|null>(null)
   const countdown=useCountdown(EVENT_END)
 
   useEffect(()=>{
@@ -306,6 +313,7 @@ export default function PriceTracker() {
       if(i+CONCURRENCY<slugs.length)await new Promise(r=>setTimeout(r,100))
     }
     setUpdatedAt(new Date());setStatus('done')
+    checkAlerts(result)
   },[rankMode])
   useEffect(()=>{loadPrices()},[loadPrices])
 
@@ -357,11 +365,13 @@ export default function PriceTracker() {
     onSelect:()=>setSelected(a),
     isFav:favorites.has(a.slug),
     onToggleFav:()=>toggleFav(a.slug),
+    onAlert:()=>setAlertTarget(a),
   })
 
   return (
     <div style={{maxWidth:1200,margin:'0 auto',padding:'2rem 1rem'}}>
       {selected&&<ChartModal arcane={selected} pd={prices[selected.slug]??{price:null}} onClose={()=>setSelected(null)}/>}
+      {alertTarget&&<AlertModal slug={alertTarget.slug} name={alertTarget.name} type="arcane" currentPrice={prices[alertTarget.slug]?.price??null} onClose={()=>setAlertTarget(null)}/>}
 
       {/* Countdown */}
       {!countdown.expired && (

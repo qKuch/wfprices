@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import NavBar from '../components/NavBar'
+import AlertBanner from '../components/AlertBanner'
 
 export const metadata: Metadata = {
   title: 'WF Prices — Warframe Arcane Tracker',
@@ -11,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ro">
       <body style={{ margin: 0, padding: 0, background: '#0d0d0f', color: '#fff', fontFamily: 'system-ui, sans-serif' }}>
         <NavBar />
+        <AlertBanner />
         {children}
       </body>
     </html>

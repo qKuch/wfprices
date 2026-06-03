@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { MODS, MOD_CATEGORIES, type Mod } from '../lib/mods'
+import { checkAlerts, getAlerts } from '../lib/alerts'
+import AlertModal from './AlertModal'
 
 interface PriceData {
   price: number | null
@@ -57,7 +59,7 @@ function SkeletonCard() {
   )
 }
 
-function ModCard({ mod, pd, loading }: { mod: Mod; pd: PriceData; loading: boolean }) {
+function ModCard({ mod, pd, loading, onAlert }: { mod: Mod; pd: PriceData; loading: boolean; onAlert: () => void }) {
   const [qty, setQty] = useState('')
   const qtyN = parseInt(qty) || 0
   const profit = pd.price && qtyN > 0 ? Math.round(qtyN * pd.price * 0.9) : null
@@ -76,7 +78,13 @@ function ModCard({ mod, pd, loading }: { mod: Mod; pd: PriceData; loading: boole
       onMouseEnter={e => (e.currentTarget.style.borderColor = '#3a3a4e')}
       onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a2e')}
     >
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.3 }}>{mod.name}</div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: '#fff', lineHeight: 1.3, paddingRight: 44 }}>{mod.name}</div>
+      <div style={{ position: 'absolute', top: 10, right: 8, display: 'flex', gap: 4 }}>
+        <button onClick={e => { e.stopPropagation(); onAlert() }}
+          style={{ background: 'none', border: 'none', fontSize: 13, cursor: 'pointer', color: getAlerts().some(al => al.slug === mod.slug && !al.dismissed) ? '#5a8dee' : '#333', padding: 2, lineHeight: 1 }}>
+          🔔
+        </button>
+      </div>
 
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: cs.bg, color: cs.color }}>{mod.category}</span>
@@ -148,6 +156,7 @@ export default function ModTracker() {
   const [sort, setSort] = useState<string>('price-desc')
   const [rankMode, setRankMode] = useState<'max'|'min'>('max')
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [alertTarget, setAlertTarget] = useState<Mod | null>(null)
 
   const slugs = React.useMemo(() => Array.from(new Set(MODS.map(m => m.slug))), [])
 
@@ -178,6 +187,7 @@ export default function ModTracker() {
     }
     setUpdatedAt(new Date())
     setLoading(false)
+    checkAlerts(result)
   }, [slugs])
 
   React.useEffect(() => { loadPrices(rankMode) }, [rankMode, loadPrices])
@@ -314,9 +324,13 @@ export default function ModTracker() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 12 }}>
           {filtered.map(mod => (
-            <ModCard key={`${mod.slug}-${mod.category}`} mod={mod} pd={prices[mod.slug] ?? { price: null }} loading={loading} />
+            <ModCard key={`${mod.slug}-${mod.category}`} mod={mod} pd={prices[mod.slug] ?? { price: null }} loading={loading} onAlert={() => setAlertTarget(mod)} />
           ))}
         </div>
+      )}
+
+      {alertTarget && (
+        <AlertModal slug={alertTarget.slug} name={alertTarget.name} type="mod" currentPrice={prices[alertTarget.slug]?.price ?? null} onClose={() => setAlertTarget(null)} />
       )}
 
       <div style={{ marginTop: 24, fontSize: 11, color: '#444', textAlign: 'center' }}>
