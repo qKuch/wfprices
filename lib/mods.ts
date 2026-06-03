@@ -136,11 +136,4 @@ export const MODS: Mod[] = [
   { name: 'Archon Stretch',           slug: 'archon_stretch',           category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
   { name: 'Archon Vitality',          slug: 'archon_vitality',          category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
   { name: 'Archon Flow',              slug: 'archon_flow',              category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Firestorm',         slug: 'archon_firestorm',         category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Steel Fiber',       slug: 'archon_steel_fiber',       category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Steadfast',         slug: 'archon_steadfast',         category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Reach',             slug: 'archon_reach',             category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Aviator',           slug: 'archon_aviator',           category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Aggression',        slug: 'archon_aggression',        category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Strut',             slug: 'archon_strut',             category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
 ]
