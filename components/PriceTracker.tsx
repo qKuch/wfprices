@@ -446,14 +446,15 @@ export default function PriceTracker() {
       {selected&&<ChartModal arcane={selected} pd={prices[selected.slug]??{price:null}} onClose={()=>setSelected(null)}/>}
 
       {/* Countdown */}
-      <div style={{background:countdown.days<3?'#2a1a1a':'#16161a',border:`1px solid ${countdown.days<3?'#5a2a2a':'#2a2a2e'}`,borderRadius:12,padding:'14px 20px',marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
-        <div>
-          <div style={{fontSize:11,color:'#888',marginBottom:4}}>⏱ Timp rămas — Operation: Belly of the Beast</div>
-          {countdown.expired?<div style={{fontSize:16,color:'#e55',fontWeight:600}}>Evenimentul s-a încheiat</div>
-            :<div style={{fontSize:22,fontWeight:700,color:countdown.days<3?'#e55':'#fff',fontVariantNumeric:'tabular-nums'}}>{countdown.days}z {pad(countdown.hours)}h {pad(countdown.minutes)}m {pad(countdown.seconds)}s</div>}
+      {!countdown.expired && (
+        <div style={{background:countdown.days<3?'#2a1a1a':'#16161a',border:`1px solid ${countdown.days<3?'#5a2a2a':'#2a2a2e'}`,borderRadius:12,padding:'14px 20px',marginBottom:16,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <div>
+            <div style={{fontSize:11,color:'#888',marginBottom:4}}>⏱ Timp rămas — Operation: Belly of the Beast</div>
+            <div style={{fontSize:22,fontWeight:700,color:countdown.days<3?'#e55':'#fff',fontVariantNumeric:'tabular-nums'}}>{countdown.days}z {pad(countdown.hours)}h {pad(countdown.minutes)}m {pad(countdown.seconds)}s</div>
+          </div>
+          <div style={{fontSize:11,color:'#555'}}>Se termina pe 1 iunie 2026</div>
         </div>
-        <div style={{fontSize:11,color:'#555'}}>Se termina pe 1 iunie 2026</div>
-      </div>
+      )}
 
       {/* Calculator profit */}
       <div style={{background:'#16161a',border:'1px solid #2a2a2e',borderRadius:12,padding:'14px 20px',marginBottom:16}}>
