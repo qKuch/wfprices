@@ -13,19 +13,16 @@ async function fetchModPrice(slug: string, maxRank: number, rankMode: 'max' | 'm
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         },
       })
-      if (res.status === 429) { await sleep(800 * (attempt + 1)); continue }
+      if (res.status === 429) { await sleep(600 * (attempt + 1)); continue }
       if (!res.ok) return null
       const data = await res.json()
       const live: any[] = data?.payload?.statistics_live?.['48hours'] ?? []
-      if (!live.length) {
-        // fallback to closed stats
-        const closed: any[] = data?.payload?.statistics_closed?.['90days'] ?? []
-        if (!closed.length) return null
-        return processEntries(closed, slug, maxRank, rankMode)
-      }
-      return processEntries(live, slug, maxRank, rankMode)
+      const closed: any[] = data?.payload?.statistics_closed?.['90days'] ?? []
+      const entries = live.length ? live : closed
+      if (!entries.length) return null
+      return processEntries(entries, slug, maxRank, rankMode)
     } catch {
-      if (attempt < 2) await sleep(400)
+      if (attempt < 2) await sleep(300)
     }
   }
   return null
@@ -66,14 +63,18 @@ export async function POST(req: NextRequest) {
   if (!slugs || !Array.isArray(slugs)) return NextResponse.json({ error: 'Invalid slugs' }, { status: 400 })
 
   const maxRankMap = Object.fromEntries(MODS.map(m => [m.slug, m.maxRank]))
-  const results: Record<string, any> = {}
 
-  // Sequential within a batch to avoid rate limiting
-  for (const slug of slugs) {
-    const r = await fetchModPrice(slug, maxRankMap[slug] ?? 0, rankMode as 'max' | 'min')
-    if (r) results[slug] = r
-    await sleep(200)
-  }
+  // Fetch all slugs in parallel with small stagger to avoid simultaneous hits
+  const results = await Promise.all(
+    slugs.map(async (slug: string, i: number) => {
+      await sleep(i * 80) // stagger: 0ms, 80ms, 160ms, 240ms
+      const r = await fetchModPrice(slug, maxRankMap[slug] ?? 0, rankMode as 'max' | 'min')
+      return [slug, r] as [string, typeof r]
+    })
+  )
 
-  return NextResponse.json({ prices: results })
+  const prices: Record<string, any> = {}
+  results.forEach(([slug, r]) => { if (r) prices[slug] = r })
+
+  return NextResponse.json({ prices })
 }

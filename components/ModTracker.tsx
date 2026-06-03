@@ -156,7 +156,7 @@ export default function ModTracker() {
     setDone(0)
     setPrices({})
     const result: Record<string, PriceData> = {}
-    const BATCH = 2
+    const BATCH = 4
     for (let i = 0; i < slugs.length; i += BATCH) {
       const batch = slugs.slice(i, i + BATCH)
       try {
@@ -174,7 +174,7 @@ export default function ModTracker() {
       } catch {}
       setDone(i + batch.length)
       setPrices({ ...result })
-      if (i + BATCH < slugs.length) await new Promise(r => setTimeout(r, 500))
+      if (i + BATCH < slugs.length) await new Promise(r => setTimeout(r, 200))
     }
     setUpdatedAt(new Date())
     setLoading(false)
