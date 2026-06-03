@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { EVENT } from '../lib/event'
 import { ARCANES, type Arcane } from '../lib/arcanes'
 
@@ -96,7 +97,7 @@ function FlipCalcInline() {
   const inp={padding:'7px 11px',borderRadius:8,border:'1px solid #2a2a2e',background:'#0d0d0f',color:'#fff',fontSize:13,outline:'none',width:'100%',boxSizing:'border-box' as const}
   return (
     <div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:16}}>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(120px, 1fr))',gap:12,marginBottom:16}}>
         {([['Cumpărare (pt)',buy,setBuy],['Vânzare (pt)',sell,setSell],['Cantitate',qty,setQty]] as [string,string,(v:string)=>void][]).map(([label,val,setter])=>(
           <div key={label}>
             <div style={{fontSize:11,color:'#666',marginBottom:5}}>{label}</div>
@@ -234,6 +235,18 @@ function CompactRow({a,pd,status,isBestInTier,isGlobalBest,onSelect,isFav,onTogg
   )
 }
 
+function SkeletonCard() {
+  return (
+    <div style={{background:'#16161a',border:'1px solid #2a2a2e',borderRadius:12,padding:'14px 16px'}}>
+      <div style={{height:13,width:'70%',background:'#222',borderRadius:6,marginBottom:10,animation:'pulse 1.5s ease-in-out infinite'}}/>
+      <div style={{height:10,width:'40%',background:'#1e1e1e',borderRadius:4,marginBottom:14}}/>
+      <div style={{height:24,background:'#1a1a1a',borderRadius:6,marginBottom:8,width:'55%'}}/>
+      <div style={{height:10,width:'60%',background:'#1e1e1e',borderRadius:4}}/>
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
+    </div>
+  )
+}
+
 async function fetchBatch(slugs:string[]):Promise<Record<string,PriceData>> {
   try {
     const res=await fetch('/api/prices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slugs})})
@@ -260,7 +273,8 @@ export default function PriceTracker() {
   const [done,setDone]=useState(0)
   const [motesInput,setMotesInput]=useState('')
   const [selected,setSelected]=useState<Arcane|null>(null)
-  const [search,setSearch]=useState('')
+  const searchParams = useSearchParams()
+  const [search,setSearch]=useState(()=>searchParams.get('search')??'')
   const [compact,setCompact]=useState(false)
   const [favorites,setFavorites]=useState<Set<string>>(new Set())
   const [showFavOnly,setShowFavOnly]=useState(false)
@@ -475,7 +489,11 @@ export default function PriceTracker() {
       )}
 
       {/* Grid / List */}
-      {groupedItems?(
+      {status==='loading'&&done===0?(
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(210px, 1fr))',gap:12}}>
+          {Array.from({length:12}).map((_,i)=><SkeletonCard key={i}/>)}
+        </div>
+      ):groupedItems?(
         <div style={{display:'flex',flexDirection:'column',gap:24}}>
           {groupedItems.map(({key,label,items})=>{
             const isSynG=SYNDICATE_FILTERS.includes(key)

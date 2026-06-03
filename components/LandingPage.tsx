@@ -34,7 +34,7 @@ function FlipCalc() {
       <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 4 }}>🔄 Flip Calculator</div>
       <div style={{ fontSize: 12, color: '#555', marginBottom: 20 }}>Calculează profitul după taxa Warframe de 10%</div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12, marginBottom: 20 }}>
         <div>
           <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>Preț cumpărare (pt)</div>
           <input type="number" min="0" value={buy} onChange={e => setBuy(e.target.value)} placeholder="0" style={inputStyle} />
@@ -90,7 +90,10 @@ function PriceRow({ item, showChange }: { item: StatItem; showChange?: boolean }
   const name = item.name
   const c = item.change24h
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1a1a1e' }}>
+    <Link href={`/tracker?search=${encodeURIComponent(name)}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1a1a1e', textDecoration: 'none', cursor: 'pointer' }}
+      onMouseEnter={e => (e.currentTarget as HTMLAnchorElement).style.background = '#1a1a1e'}
+      onMouseLeave={e => (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'}
+    >
       <div style={{ fontSize: 13, color: '#ccc' }}>{name}</div>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         {showChange && c !== null && (
@@ -99,8 +102,9 @@ function PriceRow({ item, showChange }: { item: StatItem; showChange?: boolean }
           </span>
         )}
         <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{item.price} pt</span>
+        <span style={{ fontSize: 11, color: '#555' }}>→</span>
       </div>
-    </div>
+    </Link>
   )
 }
 
@@ -159,7 +163,7 @@ export default function LandingPage() {
 
       {/* Top movers + Most expensive */}
       {!loading && stats && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16, marginBottom: 32 }}>
           <div style={{ background: '#16161a', border: '1px solid #2a2a2e', borderRadius: 14, padding: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#4caf50', marginBottom: 14 }}>↑ Top creșteri (24h)</div>
             {stats.topGainers.length ? stats.topGainers.map(item => <PriceRow key={item.slug} item={item} showChange />) : <div style={{ color: '#444', fontSize: 13 }}>Date insuficiente</div>}
