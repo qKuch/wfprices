@@ -306,6 +306,7 @@ export default function PriceTracker() {
   const filteredItems=useMemo(()=>{
     let list:Arcane[]
     if(filter==='all')list=[...ARCANES]
+    else if(filter==='syndicate-all')list=ARCANES.filter(a=>a.tier==='Syndicate')
     else if(SYNDICATE_FILTERS.includes(filter))list=ARCANES.filter(a=>a.syndicate===filter)
     else list=ARCANES.filter(a=>a.tier===filter)
     if(search.trim()){const q=search.toLowerCase();list=list.filter(a=>a.name.toLowerCase().includes(q))}
@@ -327,7 +328,7 @@ export default function PriceTracker() {
   },[filteredItems,sort,favorites,showFavOnly])
 
   const groupedItems=useMemo(()=>{
-    if(filter!=='all'||search.trim()||sort!=='tier')return null
+    if((filter!=='all'&&filter!=='syndicate-all')||search.trim()||sort!=='tier')return null
     const groups:Record<string,(typeof sortedItems[0])[]>={}
     for(const a of sortedItems){const key=a.syndicate??a.tier;if(!groups[key])groups[key]=[];groups[key].push(a)}
     return GROUP_ORDER.map(g=>({key:g,label:GROUP_LABELS[g]??g,items:groups[g]??[]})).filter(g=>g.items.length>0)
@@ -457,6 +458,7 @@ export default function PriceTracker() {
       <div style={{marginBottom:16}}>
         <div style={{fontSize:10,color:'#444',marginBottom:5,textTransform:'uppercase',letterSpacing:1}}>Sindicate</div>
         <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+          <button onClick={()=>setFilter('syndicate-all')} style={{fontSize:12,padding:'4px 12px',borderRadius:20,border:filter==='syndicate-all'?'1px solid #aaa':'1px solid #333',background:filter==='syndicate-all'?'#2a2a2a':'transparent',color:filter==='syndicate-all'?'#ccc':'#888',cursor:'pointer'}}>Toate</button>
           {SYNDICATE_FILTERS.map(s=>{const ss=SYNDICATE_STYLE[s],active=filter===s;return(
             <button key={s} onClick={()=>setFilter(s)} style={{fontSize:12,padding:'4px 12px',borderRadius:20,border:active?`1px solid ${ss.color}`:'1px solid #333',background:active?ss.bg:'transparent',color:active?ss.color:'#888',cursor:'pointer'}}>{s}</button>
           )})}

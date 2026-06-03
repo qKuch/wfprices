@@ -2,6 +2,27 @@ export const runtime = 'edge'
 import { NextResponse } from 'next/server'
 import { ARCANES } from '../../../lib/arcanes'
 
+// Subset reprezentativ pentru landing page — câteva din fiecare categorie
+// Suficient pentru "Top creșteri" și "Cele mai scumpe", fără timeout
+const STATS_SLUGS = [
+  // Legendary
+  'arcane_energize', 'arcane_grace', 'arcane_barrier',
+  // Rare
+  'arcane_avenger', 'arcane_fury', 'arcane_aegis', 'arcane_arachne', 'arcane_ultimatum',
+  // Uncommon
+  'arcane_guardian', 'arcane_velocity', 'arcane_acceleration', 'arcane_strike',
+  // Common
+  'arcane_nullifier', 'arcane_warmth', 'arcane_momentum',
+  // Ascension
+  'arcane_ice_storm', 'arcane_battery', 'secondary_surge',
+  // Special
+  'secondary_enervate', 'arcane_crepuscular',
+  // Sindicate — cele mai tranzacționate
+  'molt_augmented', 'cascadia_empower', 'melee_influence', 'melee_animosity',
+  'magus_elevate', 'virtuos_strike', 'pax_charge', 'theorem_demulcent',
+]
+
+const NAME_MAP = Object.fromEntries(ARCANES.map(a => [a.slug, a.name]))
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 async function fetchStats(slug: string) {
@@ -37,24 +58,20 @@ async function fetchStats(slug: string) {
       }
     }
     const volume = atMax.slice(-6).reduce((sum: number, e: any) => sum + (e.volume ?? 0), 0)
-    return { slug, price, change24h, volume }
+    return { slug, name: NAME_MAP[slug] ?? slug, price, change24h, volume }
   } catch { return null }
 }
 
 export async function GET() {
-  const slugs = ARCANES.map(a => a.slug)
-  const nameMap = Object.fromEntries(ARCANES.map(a => [a.slug, a.name]))
-
   const results = []
-  for (let i = 0; i < slugs.length; i += 4) {
-    const batch = slugs.slice(i, i + 4)
+  for (let i = 0; i < STATS_SLUGS.length; i += 4) {
+    const batch = STATS_SLUGS.slice(i, i + 4)
     const res = await Promise.all(batch.map(fetchStats))
     results.push(...res.filter(Boolean))
-    if (i + 4 < slugs.length) await sleep(250)
+    if (i + 4 < STATS_SLUGS.length) await sleep(200)
   }
 
   const valid = results.filter((r): r is NonNullable<typeof r> => r !== null && r.price !== null)
-    .map(r => ({ ...r, name: nameMap[r.slug] ?? r.slug }))
 
   const mostExpensive = [...valid].sort((a, b) => b.price - a.price).slice(0, 5)
   const topGainers = [...valid].filter(r => r.change24h !== null && (r.change24h ?? 0) > 0)
