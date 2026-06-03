@@ -44,9 +44,6 @@ export const MODS: Mod[] = [
   { name: 'Galvanized Aptitude',      slug: 'galvanized_aptitude',      category: 'Primary',   maxRank: 10, rarity: 'Rare'      },
   { name: 'Galvanized Chamber',       slug: 'galvanized_chamber',       category: 'Primary',   maxRank: 5,  rarity: 'Rare'      },
   { name: 'Galvanized Scope',         slug: 'galvanized_scope',         category: 'Primary',   maxRank: 10, rarity: 'Rare'      },
-  { name: 'Merciless',                slug: 'primary_merciless',        category: 'Primary',   maxRank: 10, rarity: 'Rare'      },
-  { name: 'Deadhead',                 slug: 'primary_deadhead',         category: 'Primary',   maxRank: 10, rarity: 'Rare'      },
-  { name: 'Dexterity',                slug: 'primary_dexterity',        category: 'Primary',   maxRank: 10, rarity: 'Rare'      },
 
   // ── Secondary ─────────────────────────────────────────────
   { name: 'Primed Heated Charge',     slug: 'primed_heated_charge',     category: 'Secondary', maxRank: 10, rarity: 'Legendary' },
@@ -55,9 +52,6 @@ export const MODS: Mod[] = [
   { name: 'Galvanized Diffusion',     slug: 'galvanized_diffusion',     category: 'Secondary', maxRank: 5,  rarity: 'Rare'      },
   { name: 'Galvanized Crosshairs',    slug: 'galvanized_crosshairs',    category: 'Secondary', maxRank: 10, rarity: 'Rare'      },
   { name: 'Galvanized Shot',          slug: 'galvanized_shot',          category: 'Secondary', maxRank: 10, rarity: 'Rare'      },
-  { name: 'Merciless',                slug: 'secondary_merciless',      category: 'Secondary', maxRank: 10, rarity: 'Rare'      },
-  { name: 'Deadhead',                 slug: 'secondary_deadhead',       category: 'Secondary', maxRank: 10, rarity: 'Rare'      },
-  { name: 'Dexterity',                slug: 'secondary_dexterity',      category: 'Secondary', maxRank: 10, rarity: 'Rare'      },
   { name: 'Magnum Force',             slug: 'magnum_force',             category: 'Secondary', maxRank: 5,  rarity: 'Rare'      },
 
   // ── Melee ─────────────────────────────────────────────────
@@ -68,8 +62,6 @@ export const MODS: Mod[] = [
   { name: 'Condition Overload',       slug: 'condition_overload',       category: 'Melee',     maxRank: 5,  rarity: 'Rare'      },
   { name: 'Gladiator Might',          slug: 'gladiator_might',          category: 'Melee',     maxRank: 5,  rarity: 'Uncommon'  },
   { name: 'Berserker Fury',           slug: 'berserker_fury',           category: 'Melee',     maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Merciless',                slug: 'melee_merciless',          category: 'Melee',     maxRank: 10, rarity: 'Rare'      },
-  { name: 'Deadhead',                 slug: 'melee_deadhead',           category: 'Melee',     maxRank: 10, rarity: 'Rare'      },
 
   // ── Companion ─────────────────────────────────────────────
   { name: 'Primed Pack Leader',       slug: 'primed_pack_leader',       category: 'Companion', maxRank: 10, rarity: 'Legendary' },
