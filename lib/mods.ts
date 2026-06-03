@@ -24,11 +24,8 @@ export const MODS: Mod[] = [
   // ── Warframe ─────────────────────────────────────────────
   { name: 'Primed Flow',              slug: 'primed_flow',              category: 'Warframe',  maxRank: 10, rarity: 'Legendary' },
   { name: 'Primed Continuity',        slug: 'primed_continuity',        category: 'Warframe',  maxRank: 10, rarity: 'Legendary' },
-  { name: 'Primed Vigor',             slug: 'primed_vigor',             category: 'Warframe',  maxRank: 10, rarity: 'Legendary' },
-  { name: 'Primed Sure Footed',       slug: 'primed_sure_footed',       category: 'Warframe',  maxRank: 10, rarity: 'Legendary' },
   { name: 'Adaptation',               slug: 'adaptation',               category: 'Warframe',  maxRank: 10, rarity: 'Rare'      },
   { name: 'Rolling Guard',            slug: 'rolling_guard',            category: 'Warframe',  maxRank: 10, rarity: 'Rare'      },
-  { name: 'Energize',                 slug: 'brief_respite',            category: 'Warframe',  maxRank: 5,  rarity: 'Uncommon'  },
   { name: 'Blind Rage',               slug: 'blind_rage',               category: 'Warframe',  maxRank: 10, rarity: 'Rare'      },
   { name: 'Fleeting Expertise',       slug: 'fleeting_expertise',       category: 'Warframe',  maxRank: 5,  rarity: 'Rare'      },
   { name: 'Narrow Minded',            slug: 'narrow_minded',            category: 'Warframe',  maxRank: 10, rarity: 'Rare'      },
@@ -37,12 +34,8 @@ export const MODS: Mod[] = [
   { name: 'Constitution',             slug: 'constitution',             category: 'Warframe',  maxRank: 5,  rarity: 'Rare'      },
   { name: 'Natural Talent',           slug: 'natural_talent',           category: 'Warframe',  maxRank: 5,  rarity: 'Rare'      },
   { name: 'Augur Secrets',            slug: 'augur_secrets',            category: 'Warframe',  maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Umbral Intensify',         slug: 'umbral_intensify',         category: 'Warframe',  maxRank: 5,  rarity: 'Legendary' },
-  { name: 'Umbral Fiber',             slug: 'umbral_fiber',             category: 'Warframe',  maxRank: 5,  rarity: 'Legendary' },
-  { name: 'Umbral Vitality',          slug: 'umbral_vitality',          category: 'Warframe',  maxRank: 5,  rarity: 'Legendary' },
 
   // ── Primary ───────────────────────────────────────────────
-  { name: 'Primed Shred',             slug: 'primed_shred',             category: 'Primary',   maxRank: 10, rarity: 'Legendary' },
   { name: 'Primed Bane of Grineer',   slug: 'primed_bane_of_grineer',   category: 'Primary',   maxRank: 10, rarity: 'Legendary' },
   { name: 'Primed Bane of Corpus',    slug: 'primed_bane_of_corpus',    category: 'Primary',   maxRank: 10, rarity: 'Legendary' },
   { name: 'Primed Bane of Infested',  slug: 'primed_bane_of_infested',  category: 'Primary',   maxRank: 10, rarity: 'Legendary' },
@@ -75,8 +68,6 @@ export const MODS: Mod[] = [
   { name: 'Condition Overload',       slug: 'condition_overload',       category: 'Melee',     maxRank: 5,  rarity: 'Rare'      },
   { name: 'Gladiator Might',          slug: 'gladiator_might',          category: 'Melee',     maxRank: 5,  rarity: 'Uncommon'  },
   { name: 'Berserker Fury',           slug: 'berserker_fury',           category: 'Melee',     maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Sacrificial Pressure',     slug: 'sacrificial_pressure',     category: 'Melee',     maxRank: 5,  rarity: 'Legendary' },
-  { name: 'Sacrificial Steel',        slug: 'sacrificial_steel',        category: 'Melee',     maxRank: 5,  rarity: 'Legendary' },
   { name: 'Merciless',                slug: 'melee_merciless',          category: 'Melee',     maxRank: 10, rarity: 'Rare'      },
   { name: 'Deadhead',                 slug: 'melee_deadhead',           category: 'Melee',     maxRank: 10, rarity: 'Rare'      },
 
