@@ -112,7 +112,7 @@ export default function AlertModal({ slug, name, type, currentPrice, onClose }: 
         <div style={{ fontSize: 12, color: '#444', marginBottom: 16 }}>
           Vei fi anunțat data viitoare când deschizi site-ul și prețul este{' '}
           <span style={{ color: condition === 'below' ? '#4caf50' : '#f0a050' }}>
-            {condition === 'below' ? 'sub' : 'peste'} {threshold || '?'} pt
+            {condition === 'below' ? 'strict sub' : 'strict peste'} {threshold || '?'} pt
           </span>.
         </div>
 
