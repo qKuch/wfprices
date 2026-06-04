@@ -114,9 +114,9 @@ export const MODS: Mod[] = [
   { name: 'Shimmering Blight',        slug: 'shimmering_blight',        category: 'Stance',    maxRank: 3,  rarity: 'Rare'      },
 
   // ── Archon ────────────────────────────────────────────────
-  { name: 'Archon Continuity',        slug: 'archon_continuity',        category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Intensify',         slug: 'archon_intensify',         category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Stretch',           slug: 'archon_stretch',           category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Vitality',          slug: 'archon_vitality',          category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
-  { name: 'Archon Flow',              slug: 'archon_flow',              category: 'Archon',    maxRank: 5,  rarity: 'Rare'      },
+  { name: 'Archon Continuity',        slug: 'archon_continuity',        category: 'Archon',    maxRank: 10, rarity: 'Rare'      },
+  { name: 'Archon Intensify',         slug: 'archon_intensify',         category: 'Archon',    maxRank: 10, rarity: 'Rare'      },
+  { name: 'Archon Stretch',           slug: 'archon_stretch',           category: 'Archon',    maxRank: 10, rarity: 'Rare'      },
+  { name: 'Archon Vitality',          slug: 'archon_vitality',          category: 'Archon',    maxRank: 10, rarity: 'Rare'      },
+  { name: 'Archon Flow',              slug: 'archon_flow',              category: 'Archon',    maxRank: 10, rarity: 'Rare'      },
 ]
