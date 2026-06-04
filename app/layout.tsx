@@ -6,6 +6,9 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'WF Prices — Warframe Arcane Tracker',
   description: 'Live Warframe arcane prices, flip calculator and trade history',
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
