@@ -60,15 +60,32 @@ function SkeletonCard() {
 }
 
 function ModCard({ mod, pd, loading, onAlert, hasAlert }: { mod: Mod; pd: PriceData; loading: boolean; onAlert: () => void; hasAlert: boolean }) {
-  const [qty, setQty] = useState('')
-  const qtyN = parseInt(qty) || 0
-  const profit = pd.price && qtyN > 0 ? Math.round(qtyN * pd.price * 0.9) : null
+  const [priceR0, setPriceR0] = useState('')
+  const [calcMode, setCalcMode] = useState<'endo'|'flip'>('endo')
   const change = pd.change24h ?? null
   const trendColor = change == null ? '#555' : change > 2 ? '#4caf50' : change < -2 ? '#e55' : '#888'
   const trendIcon = change == null ? '' : change > 2 ? '↑' : change < -2 ? '↓' : '→'
   const volColor = pd.volume != null ? (pd.volume >= 10 ? '#4caf50' : pd.volume >= 3 ? '#666' : '#e55') : '#444'
   const rs = RARITY_STYLE[mod.rarity ?? ''] ?? RARITY_STYLE['Common']
   const cs = CAT_STYLE[mod.category] ?? { bg: '#1a1a1a', color: '#888' }
+
+  // Endo & Credit costs from rank 0 to maxRank
+  const EBC: Record<string, number> = { Common: 10, Uncommon: 20, Rare: 30, Legendary: 40 }
+  const CrBC: Record<string, number> = { Common: 483, Uncommon: 966, Rare: 1449, Legendary: 1932 }
+  const rarity = mod.rarity ?? 'Rare'
+  const ebc = EBC[rarity] ?? 30
+  const crbc = CrBC[rarity] ?? 1449
+  const endoCost = Math.round(ebc * (Math.pow(2, mod.maxRank) - 1))
+  const creditCost = Math.round(crbc * (Math.pow(2, mod.maxRank) - 1))
+
+  // Flip calc: buy R0, rank up, sell max
+  const buyPrice = parseFloat(priceR0) || 0
+  const sellPrice = pd.price ?? 0
+  const netSell = Math.floor(sellPrice * 0.9)
+  const flipProfit = buyPrice > 0 && sellPrice > 0 ? netSell - buyPrice : null
+
+  // Endo calc: farm endo, rank up, sell max
+  const endoProfit = sellPrice > 0 ? netSell : null
 
   return (
     <div style={{
@@ -119,19 +136,52 @@ function ModCard({ mod, pd, loading, onAlert, hasAlert }: { mod: Mod; pd: PriceD
         <div style={{ fontSize: 11, color: volColor }}>● {pd.volume} tranzacții/48h</div>
       )}
 
-      {/* Mini flip calc */}
+      {/* Calculator */}
       {pd.price != null && (
-        <div style={{ borderTop: '1px solid #222', paddingTop: 8, marginTop: 2 }} onClick={e => e.stopPropagation()}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 11, color: '#555' }}>Qty:</span>
-            <input type="number" min="1" value={qty} onChange={e => setQty(e.target.value)} onKeyDown={e=>e.key==="Escape"&&e.stopPropagation()} placeholder="0"
-              style={{ width: 52, padding: '3px 7px', borderRadius: 6, border: '1px solid #2a2a2e', background: '#0d0d0f', color: '#fff', fontSize: 12, outline: 'none' }} />
-            {profit != null && profit > 0 && (
-              <span style={{ fontSize: 12, color: '#4caf50', fontWeight: 600 }}>
-                → {profit} pt <span style={{ fontSize: 10, color: '#555', fontWeight: 400 }}>(−10%)</span>
-              </span>
-            )}
+        <div style={{ borderTop: '1px solid #1e1e1e', paddingTop: 8, marginTop: 2 }} onClick={e => e.stopPropagation()}>
+          {/* Mode toggle */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+            <button onClick={() => setCalcMode('endo')} style={{ flex: 1, fontSize: 10, padding: '3px 0', borderRadius: 5, border: calcMode === 'endo' ? '1px solid #4caf50' : '1px solid #2a2a2e', background: calcMode === 'endo' ? '#0d2a0d' : 'transparent', color: calcMode === 'endo' ? '#4caf50' : '#555', cursor: 'pointer' }}>
+              Farm → Vinde
+            </button>
+            <button onClick={() => setCalcMode('flip')} style={{ flex: 1, fontSize: 10, padding: '3px 0', borderRadius: 5, border: calcMode === 'flip' ? '1px solid #f0a050' : '1px solid #2a2a2e', background: calcMode === 'flip' ? '#2a1a0d' : 'transparent', color: calcMode === 'flip' ? '#f0a050' : '#555', cursor: 'pointer' }}>
+              Cumpăr → Vinde
+            </button>
           </div>
+
+          {calcMode === 'endo' ? (
+            <div>
+              <div style={{ fontSize: 11, color: '#555', marginBottom: 4 }}>Cost rank up R0 → R{mod.maxRank}:</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                <span style={{ fontSize: 11, color: '#a0c8ff' }}>⬡ {endoCost.toLocaleString()} endo</span>
+                <span style={{ fontSize: 11, color: '#f5c518' }}>₢ {creditCost.toLocaleString()}</span>
+              </div>
+              {endoProfit != null && (
+                <div style={{ fontSize: 12, color: '#4caf50', fontWeight: 600 }}>
+                  Vânzare: {netSell} pt <span style={{ fontSize: 10, color: '#555', fontWeight: 400 }}>(−10% taxă)</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <span style={{ fontSize: 11, color: '#555', whiteSpace: 'nowrap' }}>Preț R0:</span>
+                <input type="number" min="1" value={priceR0} onChange={e => setPriceR0(e.target.value)}
+                  onKeyDown={e => e.key === 'Escape' && e.stopPropagation()}
+                  placeholder="pt"
+                  style={{ width: 58, padding: '3px 7px', borderRadius: 6, border: '1px solid #2a2a2e', background: '#0d0d0f', color: '#fff', fontSize: 12, outline: 'none' }} />
+                <span style={{ fontSize: 11, color: '#555' }}>→ sell {netSell} pt</span>
+              </div>
+              <div style={{ fontSize: 11, color: '#555', marginBottom: 4 }}>
+                + rank up: <span style={{ color: '#a0c8ff' }}>{endoCost.toLocaleString()} endo</span> + <span style={{ color: '#f5c518' }}>₢ {creditCost.toLocaleString()}</span>
+              </div>
+              {flipProfit != null && (
+                <div style={{ fontSize: 12, fontWeight: 600, color: flipProfit > 0 ? '#4caf50' : '#e55' }}>
+                  {flipProfit > 0 ? `Profit: +${flipProfit} pt` : `Pierdere: ${flipProfit} pt`}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
